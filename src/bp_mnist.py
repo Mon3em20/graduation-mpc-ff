@@ -14,7 +14,7 @@ from torchvision import datasets, transforms
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = Path.home() / "datasets"
-OUT = ROOT / "results" / "bp_mnist_results.csv"
+OUT = ROOT / "results" / "bp_mnist_results1.csv"
 SEEDS = (42, 43, 44, 45, 46)
 TIMING_REPETITIONS = 3
 EPOCHS, BATCH_SIZE, LR = 5, 128, 0.05
@@ -118,7 +118,7 @@ def run_reference_check():
         raise FileNotFoundError(f"Canonical BP CSV is required: {OUT}")
     with OUT.open(newline="") as f:
         existing = list(csv.DictReader(f))
-    if any(r.get("reference_id") == "hinton_bp_sanity_v1" for r in existing):
+    if any(r.get("reference_id") == "hinton_bp_audit_v2" for r in existing):
         raise RuntimeError("BP reference records already exist in the canonical CSV")
     train, test, _, _, _ = datasets_and_indices()
     tr, va, te = reference_indices()
@@ -128,10 +128,16 @@ def run_reference_check():
         epochs, summary = run(train, test, tr, va, te, seed, 1,
                               epochs=20, batch_size=BATCH_SIZE)
         for row in epochs:
-            row.update(record_type="reference_epoch", reference_id="hinton_bp_sanity_v1")
+            row.update(record_type="reference_bp_epoch", reference_id="hinton_bp_audit_v2",
+                       architecture="784-128-128-10 ReLU", optimizer="SGD",
+                       learning_rate=LR, batch_size=BATCH_SIZE, epochs=20,
+                       train_indices_seed=42, test_indices="official test permutation positions 1000:10000")
             rows.append(row)
         summary.update(record_type="reference_bp_seed_summary",
-                       reference_id="hinton_bp_sanity_v1")
+                       reference_id="hinton_bp_audit_v2",
+                       architecture="784-128-128-10 ReLU", optimizer="SGD",
+                       learning_rate=LR, batch_size=BATCH_SIZE, epochs=20,
+                       train_indices_seed=42, test_indices="official test permutation positions 1000:10000")
         summaries.append(summary)
         rows.append(summary)
         print(f"BP reference seed={seed}: val={summary['best_validation_accuracy_pct']:.2f}% "
@@ -139,7 +145,7 @@ def run_reference_check():
               f"train={summary['training_seconds']:.2f}s")
     values = [r["final_test_accuracy_pct"] for r in summaries]
     times = [r["training_seconds"] for r in summaries]
-    rows.append(dict(record_type="reference_bp_aggregate", reference_id="hinton_bp_sanity_v1",
+    rows.append(dict(record_type="reference_bp_aggregate", reference_id="hinton_bp_audit_v2",
         final_test_accuracy_mean_pct=sum(values) / len(values),
         final_test_accuracy_sd_pct=statistics.stdev(values),
         final_test_accuracy_min_pct=min(values), final_test_accuracy_max_pct=max(values),
@@ -164,7 +170,7 @@ def main():
     if OUT.is_file():
         with OUT.open(newline="") as f:
             preserved_reference = [r for r in csv.DictReader(f)
-                                   if r.get("record_type", "").startswith("reference_bp_")]
+                                   if r.get("record_type", "").startswith("reference_")]
     train, test, tr, va, te = datasets_and_indices()
     assert len(set(te)) == TEST_N
     rows, summaries = [], []
