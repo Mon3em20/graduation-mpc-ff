@@ -24,6 +24,8 @@ negative_sampling:
   comparison: neutral_softmax_hard
 inference:
   baseline: candidate_goodness_all_layers_or_second_layer
+  benchmark_v1: candidate_goodness_all_layers
+  benchmark_v1_note: "Standardized v1 fixes the all_layers inference profile; the original baseline selects between both variants using validation."
   reference: candidate_goodness_layers_2_to_4
 seeds: [42, 43, 44, 45, 46]
 profiles:
@@ -31,6 +33,13 @@ profiles:
     hidden_layers: 2
     epochs_per_layer: 5
     train_samples: 5000
+    threshold: 2.0
+    benchmark_id: plaintext_standardized_v1
+    note: "The benchmark v1 profile intentionally uses the source default 2.0."
+  historical_threshold_selected:
+    threshold: 3.0
+    status: historical_validation_selected
+    note: "Preserved historical records; not substituted into benchmark v1."
   source_aligned_reference:
     hidden_layers: 4
     epochs_per_layer: 60

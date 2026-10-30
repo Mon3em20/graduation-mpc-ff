@@ -70,8 +70,9 @@ python scripts/verify/verify_relu.py results/mpc/bp/relu_edge.log
 
 The two checkers compare deliberately revealed diagnostics against independent
 plaintext references with tolerance `2e-4`. Results and raw feasibility logs
-are retained under `results/`; `results/benchmarks/` is reserved for future
-project-scale profiling.
+are retained under `results/`; the standardized plaintext benchmark outputs
+and figures are under `results/benchmarks/plaintext/`. See the
+[benchmark report](docs/reports/benchmark.md) for methodology and results.
 
 ## Current status and limitations
 

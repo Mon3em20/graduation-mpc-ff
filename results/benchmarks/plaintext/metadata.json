@@ -1,0 +1,35 @@
+{
+  "benchmark_id": "plaintext_standardized_v1",
+  "profile": "project_baseline_standardized",
+  "command": "scripts/benchmark.py --rebuild-existing",
+  "python": "3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0]",
+  "torch": "2.14.1+cpu",
+  "device": "cpu",
+  "torch_threads": 4,
+  "seeds": [
+    42,
+    43,
+    44,
+    45,
+    46
+  ],
+  "timing_repetitions": 3,
+  "train_samples": 5000,
+  "validation_samples": 1000,
+  "test_samples": 1000,
+  "test_exclusion": "official test permutation positions 0:1000 excluded; positions 1000:2000 evaluated",
+  "validation_targets_pct": [
+    55,
+    60,
+    65
+  ],
+  "memory_method": "not used for method comparison: current-process RSS high-water mark",
+  "ff_threshold": 2.0,
+  "ff_threshold_decision": "v1 intentionally uses the source default 2.0; historical validation-selected threshold-3.0 records remain separate and were not replaced",
+  "historical_results_untouched": true,
+  "source_sha256": {
+    "src/baselines/bp.py": "69efb600de64bc8652a97332cb5b199dd57b7b30defee5f200d1f828694de6a8",
+    "src/baselines/ff.py": "ba6dad28d642e58bcf01dcbfd089bb01edb1e76113d8381c864df97e425bd62e",
+    "scripts/benchmark.py": "f4a87f88ac0a091ba3909acb83964c2e459c59f020a9d7a55631a3df30da3c74"
+  }
+}

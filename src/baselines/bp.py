@@ -85,6 +85,28 @@ def evaluate(model, loader):
     return loss_sum / n, 100.0 * correct / n
 
 
+def train_epoch(model, loader, optimizer, criterion):
+    """Train BP for one epoch and return its loss and update count."""
+    model.train()
+    total, count, updates = 0.0, 0, 0
+    for x, y in loader:
+        optimizer.zero_grad()
+        loss = criterion(model(x), y)
+        loss.backward()
+        optimizer.step()
+        total += loss.item() * y.size(0)
+        count += y.size(0)
+        updates += 1
+    return total / count, updates
+
+
+def select_checkpoint(best_acc, validation_accuracy, epoch, model):
+    """Return updated BP validation-checkpoint state."""
+    if validation_accuracy <= best_acc:
+        return best_acc, None, None, False
+    return (validation_accuracy, epoch, deepcopy(model.state_dict()), True)
+
+
 def run(train_ds, test_ds, tr, va, te, seed, repetition,
         epochs=EPOCHS, batch_size=BATCH_SIZE):
     random.seed(seed)
@@ -100,22 +122,13 @@ def run(train_ds, test_ds, tr, va, te, seed, repetition,
     epoch_rows = []
     for epoch in range(1, epochs + 1):
         start = time.perf_counter()
-        model.train()
-        total, count = 0.0, 0
-        for x, y in train_loader:
-            optimizer.zero_grad()
-            loss = criterion(model(x), y)
-            loss.backward()
-            optimizer.step()
-            total += loss.item() * y.size(0)
-            count += y.size(0)
-        train_loss = total / count
+        train_loss, _ = train_epoch(model, train_loader, optimizer, criterion)
         val_loss, val_acc = evaluate(model, val_loader)
         elapsed = time.perf_counter() - start
-        selected = val_acc > best_acc
+        best_acc, selected_epoch, selected_state, selected = select_checkpoint(
+            best_acc, val_acc, epoch, model)
         if selected:
-            best_acc, best_epoch = val_acc, epoch
-            best_state = deepcopy(model.state_dict())
+            best_epoch, best_state = selected_epoch, selected_state
         epoch_rows.append(dict(record_type="epoch", seed=seed, repetition=repetition,
             epoch=epoch, train_loss=train_loss, validation_loss=val_loss,
             validation_accuracy_pct=val_acc, epoch_seconds=elapsed,

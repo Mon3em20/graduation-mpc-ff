@@ -161,6 +161,97 @@ def neutral_features(model, images, last_layer):
     return features
 
 
+def sample_negative_labels(labels, generator, strategy="uniform_random",
+                           predictor_logits=None, hard_generator=None):
+    """Generate incorrect labels using the configured FF negative strategy."""
+    if strategy == "neutral_softmax_hard":
+        if predictor_logits is None or hard_generator is None:
+            raise ValueError("hard negative sampling requires predictor logits and generator")
+        logits = predictor_logits.detach().clone()
+        logits[torch.arange(labels.numel()), labels] = -torch.inf
+        return torch.multinomial(F.softmax(logits, dim=1), 1,
+                                 generator=hard_generator).squeeze(1)
+    if strategy == "uniform_random":
+        offsets = torch.randint(1, 10, labels.shape, generator=generator)
+        return (labels + offsets) % 10
+    raise ValueError(f"unsupported negative strategy: {strategy}")
+
+
+def train_layer_epoch(model, layer_index, loader, optimizer, threshold,
+                      negative_generator, negative_strategy="uniform_random",
+                      hard_negative_generator=None, predictor=None,
+                      predictor_optimizer=None, predictor_loss_fn=None):
+    """Train one FF layer epoch and return timing and diagnostic metrics."""
+    start = time.perf_counter()
+    model.train()
+    layer = model.layers[layer_index]
+    loss_sum = pos_sum = neg_sum = predictor_loss_sum = 0.0
+    predictor_seconds = negative_sampling_seconds = 0.0
+    pos_above = neg_below = examples = updates = 0
+    for images, labels in loader:
+        positive = add_label(images, labels)
+        if predictor is not None and layer_index >= 1:
+            predictor_start = time.perf_counter()
+            features = neutral_features(model, images, layer_index)
+            logits = predictor(features)
+            predictor_loss = predictor_loss_fn(logits, labels)
+            predictor_optimizer.zero_grad()
+            predictor_loss.backward()
+            predictor_optimizer.step()
+            predictor_loss_sum += predictor_loss.detach().item() * labels.numel()
+            predictor_seconds += time.perf_counter() - predictor_start
+        else:
+            logits = None
+        sampling_start = time.perf_counter()
+        sampling_strategy = (negative_strategy if layer_index >= 1
+                             else "uniform_random")
+        negative_labels = sample_negative_labels(
+            labels, negative_generator, sampling_strategy, logits,
+            hard_negative_generator)
+        negative_sampling_seconds += time.perf_counter() - sampling_start
+        negative = add_label(images, negative_labels)
+        with torch.no_grad():
+            for prior in model.layers[:layer_index]:
+                positive = normalized(F.relu(prior(positive)))
+                negative = normalized(F.relu(prior(negative)))
+        positive_goodness = F.relu(layer(positive)).square().sum(1)
+        negative_goodness = F.relu(layer(negative)).square().sum(1)
+        loss = (F.softplus(threshold - positive_goodness).mean()
+                + F.softplus(negative_goodness - threshold).mean())
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+        count = labels.numel()
+        loss_sum += loss.item() * count
+        pos_sum += positive_goodness.detach().sum().item()
+        neg_sum += negative_goodness.detach().sum().item()
+        examples += count
+        updates += 1
+        pos_above += (positive_goodness.detach() > threshold).sum().item()
+        neg_below += (negative_goodness.detach() < threshold).sum().item()
+    elapsed = time.perf_counter() - start
+    return {
+        "train_seconds": elapsed,
+        "local_loss": loss_sum / examples,
+        "mean_positive_goodness": pos_sum / examples,
+        "mean_negative_goodness": neg_sum / examples,
+        "goodness_gap": (pos_sum - neg_sum) / examples,
+        "positive_above_threshold_pct": 100.0 * pos_above / examples,
+        "negative_below_threshold_pct": 100.0 * neg_below / examples,
+        "neutral_predictor_loss": predictor_loss_sum / examples if examples else None,
+        "neutral_predictor_seconds": predictor_seconds,
+        "negative_sampling_seconds": negative_sampling_seconds,
+        "optimizer_updates": updates,
+    }
+
+
+def select_layer_checkpoint(best_acc, validation_accuracy, checkpoint, layer):
+    """Return updated FF layer checkpoint state."""
+    if validation_accuracy <= best_acc:
+        return best_acc, None, None, False
+    return validation_accuracy, checkpoint, deepcopy(layer.state_dict()), True
+
+
 def evaluate(model, loader):
     model.eval(); correct = [0, 0]; n = 0
     with torch.no_grad():
@@ -207,77 +298,33 @@ def run(train_ds, test_ds, tr, va, te, seed, repetition,
     for li, layer in enumerate(model.layers):
         optimizer = torch.optim.SGD(layer.parameters(), lr=LR)
         for epoch in range(1, epochs_per_layer + 1):
-            start = time.perf_counter(); model.train()
-            loss_sum = pos_sum = neg_sum = predictor_loss_sum = 0.0
-            predictor_seconds = negative_sampling_seconds = 0.0
-            pos_above = neg_below = examples = 0
-            for images, labels in train_loader:
-                positive = add_label(images, labels)
-                if predictor is not None and li >= 1:
-                    predictor_start = time.perf_counter()
-                    features = neutral_features(model, images, li)
-                    logits = predictor(features)
-                    predictor_loss = predictor_loss_fn(logits, labels)
-                    predictor_optimizer.zero_grad()
-                    predictor_loss.backward()
-                    predictor_optimizer.step()
-                    predictor_loss_sum += predictor_loss.detach().item() * labels.numel()
-                    predictor_seconds += time.perf_counter() - predictor_start
-                else:
-                    logits = None
-                sampling_start = time.perf_counter()
-                if negative_strategy == "neutral_softmax_hard" and li >= 1:
-                    # Hinton masks the true class then samples categorically from the
-                    # remaining neutral-pass softmax mass using choosefrom().
-                    hard_logits = logits.detach().clone()
-                    hard_logits[torch.arange(labels.numel()), labels] = -torch.inf
-                    probabilities = F.softmax(hard_logits, dim=1)
-                    negative_labels = torch.multinomial(
-                        probabilities, 1, generator=hard_neg_rng).squeeze(1)
-                else:
-                    offsets = torch.randint(1, 10, labels.shape, generator=neg_rng)
-                    negative_labels = (labels + offsets) % 10
-                negative_sampling_seconds += time.perf_counter() - sampling_start
-                negative = add_label(images, negative_labels)
-                with torch.no_grad():
-                    for prior in model.layers[:li]:
-                        positive = normalized(F.relu(prior(positive)))
-                        negative = normalized(F.relu(prior(negative)))
-                pg = F.relu(layer(positive)).square().sum(1)
-                ng = F.relu(layer(negative)).square().sum(1)
-                loss = F.softplus(threshold - pg).mean() + F.softplus(ng - threshold).mean()
-                optimizer.zero_grad(); loss.backward(); optimizer.step()
-                n = labels.numel(); loss_sum += loss.item() * n
-                pos_sum += pg.detach().sum().item(); neg_sum += ng.detach().sum().item(); examples += n
-                pos_above += (pg.detach() > threshold).sum().item()
-                neg_below += (ng.detach() < threshold).sum().item()
-            elapsed = time.perf_counter() - start
+            training_metrics = train_layer_epoch(
+                model, li, train_loader, optimizer, threshold, neg_rng,
+                negative_strategy, hard_neg_rng, predictor,
+                predictor_optimizer, predictor_loss_fn)
             reference_val = (evaluate_reference(model, val_loader)
                              if reference and li == len(model.layers) - 1 else None)
-            metrics = (evaluate(model, val_loader) if li == 1 and not reference
-                       else [None, None])
-            choice = (max(range(2), key=lambda j: metrics[j])
+            validation_metrics = (evaluate(model, val_loader) if li == 1 and not reference
+                                  else [None, None])
+            choice = (max(range(2), key=lambda j: validation_metrics[j])
                       if li == 1 and not reference else None)
             is_best = False
-            if not reference and li == 1 and metrics[choice] > best:
-                best, best_epoch, selected_variant = metrics[choice], epoch, ("all_layers" if choice == 0 else "second_layer_only")
-                best_state = deepcopy(layer.state_dict()); is_best = True
+            if not reference and li == 1:
+                best, selected_epoch, selected_state, is_best = select_layer_checkpoint(
+                    best, validation_metrics[choice], epoch, layer)
+                if is_best:
+                    best_epoch = selected_epoch
+                    best_state = selected_state
+                    selected_variant = "all_layers" if choice == 0 else "second_layer_only"
             if reference and li == len(model.layers) - 1 and reference_val > best:
                 best, best_epoch = reference_val, epoch
                 best_state = deepcopy(layer.state_dict()); is_best = True
             history.append(dict(record_type="epoch", seed=seed, repetition=repetition,
-                layer=li + 1, epoch=epoch, threshold=threshold, local_loss=loss_sum/examples,
-                mean_positive_goodness=pos_sum/examples, mean_negative_goodness=neg_sum/examples,
-                goodness_gap=(pos_sum-neg_sum)/examples,
-                positive_above_threshold_pct=100.0*pos_above/examples,
-                negative_below_threshold_pct=100.0*neg_below/examples,
-                neutral_predictor_loss=(predictor_loss_sum/examples if examples else None),
-                neutral_predictor_seconds=predictor_seconds,
-                negative_sampling_seconds=negative_sampling_seconds,
+                layer=li + 1, epoch=epoch, threshold=threshold, **training_metrics,
                 negative_strategy=negative_strategy,
-                validation_accuracy_all_layers_pct=metrics[0],
-                validation_accuracy_second_layer_only_pct=metrics[1],
-                selected_best_epoch=is_best, train_seconds=elapsed,
+                validation_accuracy_all_layers_pct=validation_metrics[0],
+                validation_accuracy_second_layer_only_pct=validation_metrics[1],
+                selected_best_epoch=is_best,
                 reference_validation_accuracy_excluding_first_pct=reference_val,
                 reference_selected_best_epoch=is_best))
         # Earlier layers are not optimized again; their parameters have no gradients here.
