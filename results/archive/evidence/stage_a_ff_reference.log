@@ -1,0 +1,4 @@
+FF reference seed=42: val=70.93% test=72.80% train=775.4s
+FF reference seed=43: val=69.79% test=72.06% train=796.5s
+FF reference seed=44: val=73.58% test=75.16% train=793.8s
+Appended 724 FF reference records to /home/abdelmonem/graduation-mpc-ff/results/ff_mnist_results.csv; preserved 557 prior rows

@@ -1,0 +1,66 @@
+Default bit length for compilation: 63
+Default security parameter for compilation: 40
+Compiling file Programs/Source/foo.mpc
+Writing binary data to Player-Data/Input-Binary-P0-0
+Setting learning rate to 0.01
+Using SGD
+Initializing dense weights in [-1.224745,1.224745]
+Writing to Programs/Bytecode/foo-TruncPr(3)_47_16-2.bc
+Writing to Programs/Bytecode/foo-multithread-1.bc
+2 runs per epoch
+Writing to Programs/Bytecode/foo-TruncPr(1)_47_16-5.bc
+Writing to Programs/Bytecode/foo-Dense-forward-4.bc
+Writing to Programs/Bytecode/foo-TruncPr(1)_45_14-7.bc
+Writing to Programs/Bytecode/foo-exp2_fx(1)_31_16_False-9.bc
+Writing to Programs/Bytecode/foo-log2_fx(1)_31_16-11.bc
+Writing to Programs/Bytecode/foo-TruncPr(1)_46_15-13.bc
+Writing to Programs/Bytecode/foo-LTZ(2)_32-15.bc
+Writing to Programs/Bytecode/foo-Output-forward-6.bc
+Writing to Programs/Bytecode/foo-multithread-17.bc
+Writing to Programs/Bytecode/foo-multithread-18.bc
+Writing to Programs/Bytecode/foo-TruncPr(3)_46_15-20.bc
+Writing to Programs/Bytecode/foo-multithread-19.bc
+Initializing dense weights in [-1.224745,1.224745]
+Writing to Programs/Bytecode/foo-multithread-21.bc
+Writing to Programs/Bytecode/foo-TruncPr(2)_47_16-24.bc
+Writing to Programs/Bytecode/foo-multithread-23.bc
+Writing to Programs/Bytecode/foo-multithread-25.bc
+Writing to Programs/Bytecode/foo-Dense-forward-22.bc
+Writing to Programs/Bytecode/foo-FPDiv(1)_31_16-26.bc
+Writing to Programs/Schedules/foo.sch
+Writing to Programs/Bytecode/foo-0.bc
+Hash: 7c3187af281cbda159bc0e7114ede713452f3742cc32875032fd514b5c47f842
+Program requires at most:
+           8 integer inputs from player 0
+           2 integer opens
+         703 integer cut randoms
+        3505 integer 3-way splits
+        2902 integer 3-way split rounds
+      490107 bit triples
+       13008 integer bit2As
+       12203 integer bit2A rounds
+       15505 integer probabilistic truncations
+         303 integer bits
+       31109 integer triples
+       29903 integer simple multiplications
+         200 matrix multiplications (1x3 * 3x1)
+         802 integer dot products
+       99200 bit opens
+         200 matrix multiplications (3x1 * 1x1)
+           1 matrix multiplications (2x3 * 3x1)
+       44121 virtual machine rounds
+Expected communication is 2.03405 MB online and 0 MB offline.
+Running program...
+Running /home/abdelmonem/MP-SPDZ/Scripts/../replicated-ring-party.x 0 foo -pn 12183 -h localhost
+Running /home/abdelmonem/MP-SPDZ/Scripts/../replicated-ring-party.x 1 foo -pn 12183 -h localhost
+Running /home/abdelmonem/MP-SPDZ/Scripts/../replicated-ring-party.x 2 foo -pn 12183 -h localhost
+Trying to run 64-bit computation
+Using SGD
+done with epoch 0done with epoch 1done with epoch 2done with epoch 3done with epoch 4done with epoch 5done with epoch 6done with epoch 7done with epoch 8done with epoch 9done with epoch 10done with epoch 11done with epoch 12done with epoch 13done with epoch 14done with epoch 15done with epoch 16done with epoch 17done with epoch 18done with epoch 19done with epoch 20done with epoch 21done with epoch 22done with epoch 23done with epoch 24done with epoch 25done with epoch 26done with epoch 27done with epoch 28done with epoch 29done with epoch 30done with epoch 31done with epoch 32done with epoch 33done with epoch 34done with epoch 35done with epoch 36done with epoch 37done with epoch 38done with epoch 39done with epoch 40done with epoch 41done with epoch 42done with epoch 43done with epoch 44done with epoch 45done with epoch 46done with epoch 47done with epoch 48done with epoch 49done with epoch 50done with epoch 51done with epoch 52done with epoch 53done with epoch 54done with epoch 55done with epoch 56done with epoch 57done with epoch 58done with epoch 59done with epoch 60done with epoch 61done with epoch 62done with epoch 63done with epoch 64done with epoch 65done with epoch 66done with epoch 67done with epoch 68done with epoch 69done with epoch 70done with epoch 71done with epoch 72done with epoch 73done with epoch 74done with epoch 75done with epoch 76done with epoch 77done with epoch 78done with epoch 79done with epoch 80done with epoch 81done with epoch 82done with epoch 83done with epoch 84done with epoch 85done with epoch 86done with epoch 87done with epoch 88done with epoch 89done with epoch 90done with epoch 91done with epoch 92done with epoch 93done with epoch 94done with epoch 95done with epoch 96done with epoch 97done with epoch 98done with epoch 99
+[0, 1]
+The following benchmarks are including preprocessing (offline phase).
+Time = 7.27021 seconds 
+Data sent = 0.632199 MB in ~71828 rounds (party 0 only; rounds counted double due to multi-threading; use '-v' for more details)
+Global data sent = 2.01811 MB (all parties)
+The compiler overestimated the communication.
+The computation domain is too small for low-round truncation; it would need to have at least 103 bits.

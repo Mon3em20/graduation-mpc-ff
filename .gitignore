@@ -34,5 +34,5 @@ MNIST/
 # Jupyter temporary files
 .ipynb_checkpoints/
 
-# Logs
-*.log
+# Local runtime logs outside preserved research evidence
+*.tmp

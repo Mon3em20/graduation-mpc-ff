@@ -1,0 +1,4 @@
+FF reference seed=42: fixed60_val=70.93% fixed60_test=72.80% best_epoch=1 best_val=73.58% best_ckpt_test=75.30% train=774.8s
+FF reference seed=43: fixed60_val=69.79% fixed60_test=72.06% best_epoch=1 best_val=73.66% best_ckpt_test=75.74% train=788.4s
+FF reference seed=44: fixed60_val=73.58% fixed60_test=75.16% best_epoch=1 best_val=74.94% best_ckpt_test=76.82% train=773.7s
+Appended 724 FF reference records to /home/abdelmonem/graduation-mpc-ff/results/ff_mnist_results.csv; preserved 1281 prior rows

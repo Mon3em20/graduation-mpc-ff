@@ -1,0 +1,43 @@
+Default bit length for compilation: 63
+Default security parameter for compilation: 40
+Compiling file Programs/Source/bp_tiny.mpc
+Writing binary data to Player-Data/Input-Binary-P0-0
+Writing to Programs/Bytecode/bp_tiny-TruncPr(4)_47_16-1.bc
+Writing to Programs/Bytecode/bp_tiny-LTZ(4)_32-3.bc
+Writing to Programs/Bytecode/bp_tiny-TruncPr(2)_47_16-5.bc
+Writing to Programs/Bytecode/bp_tiny-TruncPr(6)_47_16-6.bc
+Writing to Programs/Bytecode/bp_tiny-TruncPr(3)_47_16-7.bc
+Writing to Programs/Schedules/bp_tiny.sch
+Writing to Programs/Bytecode/bp_tiny-0.bc
+Hash: a0d9a829cf7ceaf36b1f923031406027bebc33fb3c55ee41e4964fb2494d9497
+Program requires at most:
+          12 integer inputs from player 0
+          29 integer triples
+          29 integer simple multiplications
+          25 integer probabilistic truncations
+           4 integer 3-way splits
+           1 integer 3-way split rounds
+         460 bit triples
+           4 integer bit2As
+           1 integer bit2A rounds
+          24 integer opens
+          29 virtual machine rounds
+Expected communication is 0.0024365 MB online and 0 MB offline.
+Running program...
+Running /home/abdelmonem/MP-SPDZ/Scripts/../replicated-ring-party.x 0 bp_tiny -pn 12705 -h localhost
+Running /home/abdelmonem/MP-SPDZ/Scripts/../replicated-ring-party.x 1 bp_tiny -pn 12705 -h localhost
+Running /home/abdelmonem/MP-SPDZ/Scripts/../replicated-ring-party.x 2 bp_tiny -pn 12705 -h localhost
+Trying to run 64-bit computation
+z1=[1.5, 2.5]
+h1=[1.5, 2.5]
+y_hat=-0.75
+loss=0.28125
+d_w2=[-1.125, -1.875] d_b2=-0.75
+d_w1=[[-0.75, -1.5], [0.75, 1.5]] d_b1=[-0.75, 0.75]
+new_w2=[1.1125, -0.812485] new_b2=0.324997
+new_w1=[[1.07501, 0.150009], [-0.0750122, 0.849991]] new_b1=[0.575012, 0.425003]
+The following benchmarks are including preprocessing (offline phase).
+Time = 0.0100608 seconds 
+Data sent = 0.000811 MB in ~30 rounds (party 0 only; use '-v' for more details)
+Global data sent = 0.002441 MB (all parties)
+The computation domain is too small for low-round truncation; it would need to have at least 87 bits.

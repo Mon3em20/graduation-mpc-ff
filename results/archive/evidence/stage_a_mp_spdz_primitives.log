@@ -1,0 +1,50 @@
+Default bit length for compilation: 63
+Default security parameter for compilation: 40
+Compiling file Programs/Source/stage_a_primitives.mpc
+Writing binary data to Player-Data/Input-Binary-P0-0
+Writing to Programs/Bytecode/stage_a_primitives-TruncPr(4)_47_16-1.bc
+Writing to Programs/Bytecode/stage_a_primitives-TruncPr(1)_47_16-3.bc
+Writing to Programs/Bytecode/stage_a_primitives-TruncPr(1)_45_14-4.bc
+Writing to Programs/Bytecode/stage_a_primitives-exp2_fx(1)_31_16_False-6.bc
+Writing to Programs/Bytecode/stage_a_primitives-log2_fx(1)_31_16-8.bc
+Writing to Programs/Bytecode/stage_a_primitives-TruncPr(1)_46_15-10.bc
+Writing to Programs/Bytecode/stage_a_primitives-LTZ(4)_32-12.bc
+Writing to Programs/Bytecode/stage_a_primitives-TruncPr(2)_47_16-14.bc
+Writing to Programs/Bytecode/stage_a_primitives-InvertSqrt(1)_31_16-15.bc
+Writing to Programs/Bytecode/stage_a_primitives-LTZ(2)_64-17.bc
+Writing to Programs/Schedules/stage_a_primitives.sch
+Writing to Programs/Bytecode/stage_a_primitives-0.bc
+Hash: 3efc4715e80606720624b5261d36d06452248a2a5bae31c08300f387a4869e75
+Program requires at most:
+          14 integer inputs from player 0
+         135 integer triples
+           1 matrix multiplications (2x2 * 2x2)
+           4 integer dot products
+          48 integer probabilistic truncations
+          13 integer opens
+         127 integer simple multiplications
+          18 integer 3-way splits
+          14 integer 3-way split rounds
+        2983 bit triples
+          64 integer bit2As
+          60 integer bit2A rounds
+           3 integer cut randoms
+         616 bit opens
+         192 virtual machine rounds
+Expected communication is 0.00960663 MB online and 0 MB offline.
+Running program...
+Running /home/abdelmonem/MP-SPDZ/Scripts/../replicated-ring-party.x 0 stage_a_primitives -pn 14873 -h localhost
+Running /home/abdelmonem/MP-SPDZ/Scripts/../replicated-ring-party.x 1 stage_a_primitives -pn 14873 -h localhost
+Running /home/abdelmonem/MP-SPDZ/Scripts/../replicated-ring-party.x 2 stage_a_primitives -pn 14873 -h localhost
+Trying to run 64-bit computation
+matmul=[[19, 22], [43, 50]]
+fixed_mul_trunc=3
+relu=0,2.5
+inverse_sqrt=0.199768 normalized=0.599304,0.799072
+softplus=0.974045
+negative_label_wrap=[1, 0]
+The following benchmarks are including preprocessing (offline phase).
+Time = 0.0281919 seconds 
+Data sent = 0.003191 MB in ~326 rounds (party 0 only; use '-v' for more details)
+Global data sent = 0.009733 MB (all parties)
+The computation domain is too small for low-round truncation; it would need to have at least 103 bits.

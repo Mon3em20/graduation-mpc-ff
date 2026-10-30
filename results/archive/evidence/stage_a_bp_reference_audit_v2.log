@@ -1,0 +1,4 @@
+BP reference seed=42: val=96.53% test=96.89% train=69.62s
+BP reference seed=43: val=96.61% test=97.01% train=69.96s
+BP reference seed=44: val=96.61% test=97.18% train=70.05s
+Appended 64 BP reference records to /home/abdelmonem/graduation-mpc-ff/results/bp_mnist_results.csv; preserved 95 prior rows

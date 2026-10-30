@@ -1,0 +1,56 @@
+"""Tiny secret fixed-point BP prototype for the inactive ReLU branch."""
+from Compiler import ml
+
+sfix.set_precision(16, 31)
+print_float_precision(6)
+
+x = sfix.input_tensor_via(0, [1.0, 2.0])
+target = sfix.input_tensor_via(0, [0.0])[0]
+
+w1 = sfix.input_tensor_via(0, [[1.0, 0.0], [0.0, 1.0]])
+b1 = sfix.input_tensor_via(0, [-1.5, 0.5])
+w2 = sfix.input_tensor_via(0, [1.0, -1.0])
+b2 = sfix.input_tensor_via(0, [0.25])[0]
+
+z1 = [
+    w1[0][0] * x[0] + w1[0][1] * x[1] + b1[0],
+    w1[1][0] * x[0] + w1[1][1] * x[1] + b1[1],
+]
+h1 = [ml.relu(value) for value in z1]
+y_hat = w2[0] * h1[0] + w2[1] * h1[1] + b2
+error = y_hat - target
+loss = sfix(0.5) * error * error
+
+d_y_hat = error
+d_w2 = [d_y_hat * h1[0], d_y_hat * h1[1]]
+d_b2 = d_y_hat
+d_h1 = [d_y_hat * w2[0], d_y_hat * w2[1]]
+d_z1 = [
+    d_h1[0] * (z1[0] > 0),
+    d_h1[1] * (z1[1] > 0),
+]
+d_w1 = [
+    [d_z1[0] * x[0], d_z1[0] * x[1]],
+    [d_z1[1] * x[0], d_z1[1] * x[1]],
+]
+d_b1 = d_z1
+
+learning_rate = sfix(0.1)
+new_w1 = [[w1[i][j] - learning_rate * d_w1[i][j] for j in range(2)]
+          for i in range(2)]
+new_b1 = [b1[i] - learning_rate * d_b1[i] for i in range(2)]
+new_w2 = [w2[i] - learning_rate * d_w2[i] for i in range(2)]
+new_b2 = b2 - learning_rate * d_b2
+
+print_ln('z1=%s', [value.reveal() for value in z1])
+print_ln('h1=%s', [value.reveal() for value in h1])
+print_ln('y_hat=%s', y_hat.reveal())
+print_ln('loss=%s', loss.reveal())
+print_ln('d_w2=%s d_b2=%s', [value.reveal() for value in d_w2], d_b2.reveal())
+print_ln('d_h1=%s d_z1=%s', [value.reveal() for value in d_h1],
+         [value.reveal() for value in d_z1])
+print_ln('d_w1=%s d_b1=%s', [[value.reveal() for value in row] for row in d_w1],
+         [value.reveal() for value in d_b1])
+print_ln('new_w2=%s new_b2=%s', [value.reveal() for value in new_w2], new_b2.reveal())
+print_ln('new_w1=%s new_b1=%s', [[value.reveal() for value in row] for row in new_w1],
+         [value.reveal() for value in new_b1])

@@ -1,5 +1,6 @@
-"""Plaintext greedy Forward-Forward MNIST baseline for Stage A."""
+"""Plaintext greedy Forward-Forward MNIST baseline."""
 import csv
+import os
 import random
 import statistics
 import sys
@@ -13,16 +14,57 @@ from torch import nn
 from torch.utils.data import DataLoader, Subset
 from torchvision import datasets, transforms
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 DATA = Path.home() / "datasets"
-OUT = ROOT / "results" / "ff_mnist_results1.csv"
-BASELINE_ARCHIVE = ROOT / "results" / "archive" / "ff_mnist_baseline_before_threshold_diagnostics.csv"
+CANONICAL_OUT = ROOT / "results" / "baselines" / "ff.csv"
+OUT = CANONICAL_OUT
+BASELINE_ARCHIVE = ROOT / "results" / "archive" / "ff_baseline_before_threshold_diagnostics.csv"
 SEEDS = (42, 43, 44, 45, 46)
 TIMING_REPETITIONS = 3
 EPOCHS_PER_LAYER, BATCH_SIZE, LR, THRESHOLD = 5, 128, 0.01, 2.0
 THRESHOLD_GRID = (0.5, 1.5, 2.0, 3.0)
 TRAIN_N, VALID_N, TEST_N, OLD_TEST_N = 5000, 1000, 1000, 1000
 torch.set_num_threads(4)
+
+REGENERATED_RECORD_TYPES = {
+    "epoch", "seed_summary", "aggregate", "threshold_diagnostic_epoch",
+    "threshold_diagnostic_seed", "threshold_diagnostic_aggregate",
+    "threshold_selection", "baseline_epoch", "baseline_seed_summary",
+    "baseline_aggregate",
+}
+
+
+def write_csv_atomic(path, rows):
+    """Write rows without exposing a partial or failed replacement."""
+    fields = sorted({key for row in rows for key in row})
+    temp = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    try:
+        with temp.open("w", newline="") as stream:
+            writer = csv.DictWriter(stream, fieldnames=fields)
+            writer.writeheader()
+            writer.writerows(rows)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temp, path)
+    finally:
+        if temp.exists():
+            temp.unlink()
+
+
+def preserve_historical_rows(rows):
+    return [
+        row for row in rows
+        if row.get("record_type") not in REGENERATED_RECORD_TYPES
+    ]
+
+
+def parse_output_path(argv):
+    if "--output" not in argv:
+        return CANONICAL_OUT
+    index = argv.index("--output")
+    if index + 1 >= len(argv) or argv[index + 1].startswith("--"):
+        raise ValueError("--output requires a CSV path")
+    return Path(argv[index + 1]).expanduser()
 
 
 def get_data():
@@ -144,6 +186,10 @@ def run(train_ds, test_ds, tr, va, te, seed, repetition,
         epochs_per_layer=EPOCHS_PER_LAYER, batch_size=BATCH_SIZE, reference=False,
         reference_id="hinton_ff_sanity_v1", negative_strategy="uniform_random",
         auxiliary_predictor=False):
+    if negative_strategy == "neutral_softmax_hard" and not auxiliary_predictor:
+        raise ValueError("neutral_softmax_hard requires auxiliary_predictor=True")
+    if negative_strategy not in {"uniform_random", "neutral_softmax_hard"}:
+        raise ValueError(f"unsupported negative strategy: {negative_strategy}")
     random.seed(seed); torch.manual_seed(seed)
     model = FF(width, hidden_layers)
     train_loader = DataLoader(Subset(train_ds, tr), batch_size=batch_size, shuffle=True,
@@ -283,11 +329,12 @@ def reference_indices():
             test_perm[OLD_TEST_N:].tolist())
 
 
-def run_reference_check():
+def run_reference_check(output=None):
     """Append a narrower source-aligned FF check without replacing baseline records."""
-    if not OUT.is_file():
-        raise FileNotFoundError(f"Canonical FF CSV is required: {OUT}")
-    with OUT.open(newline="") as f:
+    output = output or CANONICAL_OUT
+    if not output.is_file():
+        raise FileNotFoundError(f"Canonical FF CSV is required: {output}")
+    with output.open(newline="") as f:
         existing = list(csv.DictReader(f))
     if any(r.get("reference_id") == "hinton_ff_checkpoint_v2" for r in existing):
         raise RuntimeError("FF reference records already exist in the canonical CSV")
@@ -338,24 +385,17 @@ def run_reference_check():
         train_samples=len(tr), validation_samples=len(va), test_samples=len(te),
         reference_note="source-aligned reduced-width check; not a Hinton reproduction"))
     all_rows = existing + records
-    fields = sorted({k for row in all_rows for k in row})
-    temp = OUT.with_name(".ff_mnist_results.reference.tmp")
-    try:
-        with temp.open("w", newline="") as f:
-            writer = csv.DictWriter(f, fieldnames=fields); writer.writeheader(); writer.writerows(all_rows)
-        temp.replace(OUT)
-    finally:
-        if temp.exists():
-            temp.unlink()
-    print(f"Appended {len(records)} FF reference records to {OUT}; preserved {len(existing)} prior rows")
+    write_csv_atomic(output, all_rows)
+    print(f"Appended {len(records)} FF reference records to {output}; preserved {len(existing)} prior rows")
 
 
-def run_negative_comparison():
+def run_negative_comparison(output=None):
     """Matched random-vs-Hinton-selector check on the reduced four-layer reference model."""
-    if not OUT.is_file():
-        raise FileNotFoundError(f"Canonical FF CSV is required: {OUT}")
+    output = output or CANONICAL_OUT
+    if not output.is_file():
+        raise FileNotFoundError(f"Canonical FF CSV is required: {output}")
     comparison_id = "hinton_ff_negative_comparison_v1"
-    with OUT.open(newline="") as f:
+    with output.open(newline="") as f:
         existing = list(csv.DictReader(f))
     if any(r.get("experiment_id") == comparison_id for r in existing):
         raise RuntimeError("FF negative-comparison records already exist in the canonical CSV")
@@ -441,30 +481,22 @@ def run_negative_comparison():
             seeds="42-44", train_samples=len(tr), validation_samples=len(va), test_samples=len(te),
             auxiliary_predictor=True, **layer_gaps))
     all_rows = existing + records
-    fields = sorted({k for row in all_rows for k in row})
-    temp = OUT.with_name(".ff_mnist_results.negative_comparison.tmp")
-    try:
-        with temp.open("w", newline="") as f:
-            writer = csv.DictWriter(f, fieldnames=fields); writer.writeheader(); writer.writerows(all_rows)
-        temp.replace(OUT)
-    finally:
-        if temp.exists():
-            temp.unlink()
-    print(f"Appended {len(records)} negative-comparison records to {OUT}; preserved {len(existing)} prior rows")
+    write_csv_atomic(output, all_rows)
+    print(f"Appended {len(records)} negative-comparison records to {output}; preserved {len(existing)} prior rows")
 
 
 def main():
+    output = parse_output_path(sys.argv)
     if "--negative-comparison" in sys.argv:
-        run_negative_comparison()
+        run_negative_comparison(output)
         return
     if "--reference-check" in sys.argv:
-        run_reference_check()
+        run_reference_check(output)
         return
-    preserved_reference = []
-    if OUT.is_file():
-        with OUT.open(newline="") as f:
-            preserved_reference = [r for r in csv.DictReader(f)
-                                   if r.get("record_type", "").startswith("reference_ff_")]
+    existing_rows = []
+    if output.is_file():
+        with output.open(newline="") as f:
+            existing_rows = list(csv.DictReader(f))
     if not BASELINE_ARCHIVE.is_file():
         raise FileNotFoundError(f"Preserved baseline CSV is required: {BASELINE_ARCHIVE}")
     with BASELINE_ARCHIVE.open(newline="") as f:
@@ -536,7 +568,9 @@ def main():
             training_seconds_max=max(times), repetitions=TIMING_REPETITIONS, seeds="42-46"))
     diagnostic_rows.extend(diagnostic_summaries)
     # Save diagnostics and the selection decision ahead of any final-test records.
-    rows = baseline_records + diagnostic_rows + aggregates + [selection_row] + selected_records
+    preserved_historical = preserve_historical_rows(existing_rows)
+    rows = (preserved_historical + baseline_records + diagnostic_rows + aggregates
+            + [selection_row] + selected_records)
     common = dict(architecture="784-128-128; ReLU; L2 normalization", optimizer="per-layer SGD",
         learning_rate=LR, batch_size=BATCH_SIZE, epochs_per_layer=EPOCHS_PER_LAYER,
         train_indices_seed=42, legacy_test_excluded=OLD_TEST_N,
@@ -545,11 +579,8 @@ def main():
         row.update(common)
         if row.get("record_type", "").startswith("threshold_diagnostic"):
             row["diagnostic_note"] = "validation-only; test was not evaluated"
-    fields = sorted({k for row in rows + preserved_reference for k in row})
-    with OUT.open("w", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=fields); writer.writeheader(); writer.writerows(rows)
-        writer.writerows(preserved_reference)
-    print(f"Wrote {len(rows)} rows to {OUT}")
+    write_csv_atomic(output, rows)
+    print(f"Wrote {len(rows)} rows to {output}; preserved {len(preserved_historical)} historical rows")
 
 
 if __name__ == "__main__": main()

@@ -1,5 +1,6 @@
-"""Reproducible plaintext MNIST BP baseline for Stage A."""
+"""Reproducible plaintext MNIST BP baseline."""
 import csv
+import os
 import statistics
 import sys
 import random
@@ -12,15 +13,44 @@ from torch import nn
 from torch.utils.data import DataLoader, Subset
 from torchvision import datasets, transforms
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 DATA = Path.home() / "datasets"
-OUT = ROOT / "results" / "bp_mnist_results1.csv"
+CANONICAL_OUT = ROOT / "results" / "baselines" / "bp.csv"
+OUT = CANONICAL_OUT
 SEEDS = (42, 43, 44, 45, 46)
 TIMING_REPETITIONS = 3
 EPOCHS, BATCH_SIZE, LR = 5, 128, 0.05
 TRAIN_N, VALID_N, TEST_N = 5000, 1000, 1000
 OLD_TEST_N = 1000
 torch.set_num_threads(4)
+
+
+def parse_output_path(argv):
+    if "--output" not in argv:
+        return CANONICAL_OUT
+    index = argv.index("--output")
+    if index + 1 >= len(argv) or argv[index + 1].startswith("--"):
+        raise ValueError("--output requires a CSV path")
+    return Path(argv[index + 1]).expanduser()
+
+
+def write_csv_atomic(path, rows):
+    fields = sorted({key for row in rows for key in row})
+    temp = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    try:
+        with temp.open("w", newline="") as stream:
+            writer = csv.DictWriter(stream, fieldnames=fields)
+            writer.writeheader()
+            writer.writerows(rows)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temp, path)
+    finally:
+        if temp.exists():
+            temp.unlink()
+
+
+BASELINE_RECORD_TYPES = {"epoch", "seed_summary", "aggregate"}
 
 
 def datasets_and_indices():
@@ -112,11 +142,12 @@ def reference_indices():
     return tr, va, te
 
 
-def run_reference_check():
+def run_reference_check(output=None):
     """Append a small, source-aligned full-MNIST BP check to canonical evidence."""
-    if not OUT.is_file():
-        raise FileNotFoundError(f"Canonical BP CSV is required: {OUT}")
-    with OUT.open(newline="") as f:
+    output = output or CANONICAL_OUT
+    if not output.is_file():
+        raise FileNotFoundError(f"Canonical BP CSV is required: {output}")
+    with output.open(newline="") as f:
         existing = list(csv.DictReader(f))
     if any(r.get("reference_id") == "hinton_bp_audit_v2" for r in existing):
         raise RuntimeError("BP reference records already exist in the canonical CSV")
@@ -156,21 +187,20 @@ def run_reference_check():
         reference_note="full MNIST split; 784-128-128-10 ReLU; 20 epochs; test excludes legacy-exposed 1,000"))
     all_rows = existing + rows
     fields = sorted({k for row in all_rows for k in row})
-    with OUT.open("w", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=fields); writer.writeheader(); writer.writerows(all_rows)
-    print(f"Appended {len(rows)} BP reference records to {OUT}; preserved {len(existing)} prior rows")
+    write_csv_atomic(output, all_rows)
+    print(f"Appended {len(rows)} BP reference records to {output}; preserved {len(existing)} prior rows")
 
 
 def main():
+    output = parse_output_path(sys.argv)
     if "--reference-check" in sys.argv:
-        run_reference_check()
+        run_reference_check(output)
         return
-    OUT.parent.mkdir(exist_ok=True)
-    preserved_reference = []
-    if OUT.is_file():
-        with OUT.open(newline="") as f:
-            preserved_reference = [r for r in csv.DictReader(f)
-                                   if r.get("record_type", "").startswith("reference_")]
+    output.parent.mkdir(parents=True, exist_ok=True)
+    existing_rows = []
+    if output.is_file():
+        with output.open(newline="") as f:
+            existing_rows = list(csv.DictReader(f))
     train, test, tr, va, te = datasets_and_indices()
     assert len(set(te)) == TEST_N
     rows, summaries = [], []
@@ -193,21 +223,21 @@ def main():
         training_seconds_std=torch.tensor(times).std(unbiased=True).item(),
         training_seconds_min=min(times), training_seconds_max=max(times),
         repetitions=TIMING_REPETITIONS, seeds="42-46"))
-    fields = sorted({k for row in rows + preserved_reference for k in row})
+    preserved_historical = [
+        row for row in existing_rows
+        if row.get("record_type") not in BASELINE_RECORD_TYPES
+    ]
+    fields = sorted({k for row in rows + preserved_historical for k in row})
     fields = sorted(set(fields) | {"architecture", "optimizer", "learning_rate", "batch_size",
                                    "epochs", "train_indices_seed", "legacy_test_excluded",
                                    "final_test_indices"})
-    with OUT.open("w", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=fields); writer.writeheader()
-        for row in rows:
-            row.update(architecture="784-128-128-10 ReLU", optimizer="SGD",
-                       learning_rate=LR, batch_size=BATCH_SIZE, epochs=EPOCHS,
-                       train_indices_seed=42, legacy_test_excluded=OLD_TEST_N,
-                       final_test_indices="official test permutation positions 1000:2000")
-            writer.writerow(row)
-        for row in preserved_reference:
-            writer.writerow(row)
-    print(f"Wrote {len(rows)} rows to {OUT}")
+    for row in rows:
+        row.update(architecture="784-128-128-10 ReLU", optimizer="SGD",
+                   learning_rate=LR, batch_size=BATCH_SIZE, epochs=EPOCHS,
+                   train_indices_seed=42, legacy_test_excluded=OLD_TEST_N,
+                   final_test_indices="official test permutation positions 1000:2000")
+    write_csv_atomic(output, rows + preserved_historical)
+    print(f"Wrote {len(rows)} rows to {output}; preserved {len(preserved_historical)} historical rows")
 
 
 if __name__ == "__main__":

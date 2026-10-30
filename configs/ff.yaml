@@ -1,0 +1,41 @@
+# Reference configuration; the baseline script currently uses its module constants.
+dataset:
+  name: MNIST
+  train_samples: 5000
+  validation_samples: 1000
+  test_samples: 1000
+  test_indices: "seeded official-test positions 1000:2000"
+model:
+  architecture: "784-128-128-128-128"
+  hidden_layers: 4
+  units_per_layer: 128
+  activation: ReLU
+  normalization: L2_between_layers
+goodness: pre_normalization_squared_relu_sum
+threshold: 2.0
+local_loss: "softplus(threshold-positive) + softplus(negative-threshold)"
+optimizer:
+  name: per_layer_SGD
+  learning_rate: 0.01
+  batch_size: 128
+epochs_per_layer: 5
+negative_sampling:
+  baseline: uniform_random_incorrect_label
+  comparison: neutral_softmax_hard
+inference:
+  baseline: candidate_goodness_all_layers_or_second_layer
+  reference: candidate_goodness_layers_2_to_4
+seeds: [42, 43, 44, 45, 46]
+profiles:
+  project_baseline:
+    hidden_layers: 2
+    epochs_per_layer: 5
+    train_samples: 5000
+  source_aligned_reference:
+    hidden_layers: 4
+    epochs_per_layer: 60
+    train_samples: 50000
+    validation_samples: 10000
+    test_samples: 9000
+    seeds: [42, 43, 44]
+    reference_id: hinton_ff_checkpoint_v2

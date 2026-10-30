@@ -1,0 +1,50 @@
+Default bit length for compilation: 63
+Default security parameter for compilation: 40
+Compiling file Programs/Source/stage_a_remaining.mpc
+Writing binary data to Player-Data/Input-Binary-P0-0
+Writing to Programs/Bytecode/stage_a_remaining-LTZ(2)_32-1.bc
+Writing to Programs/Bytecode/stage_a_remaining-LTZ(6)_32-3.bc
+Writing to Programs/Bytecode/stage_a_remaining-TruncPr(6)_45_14-4.bc
+Writing to Programs/Bytecode/stage_a_remaining-exp2_fx(6)_31_16_False-6.bc
+Writing to Programs/Bytecode/stage_a_remaining-AppRcr(1)_31_16_False_False-8.bc
+Writing to Programs/Bytecode/stage_a_remaining-log2_fx(1)_31_16-10.bc
+Writing to Programs/Bytecode/stage_a_remaining-TruncPr(1)_46_15-12.bc
+Writing to Programs/Bytecode/stage_a_remaining-TruncPr(3)_63_16-14.bc
+Writing to Programs/Bytecode/stage_a_remaining-TruncPr(3)_63_32-16.bc
+Writing to Programs/Bytecode/stage_a_remaining-TruncPr(1)_62_32-18.bc
+Writing to Programs/Bytecode/stage_a_remaining-TruncPr(3)_47_16-20.bc
+Writing to Programs/Bytecode/stage_a_remaining-LTZ(192)_64-22.bc
+Writing to Programs/Bytecode/stage_a_remaining-LTZ(9)_64-24.bc
+Writing to Programs/Bytecode/stage_a_remaining-EQZ(3)_63-25.bc
+Writing to Programs/Schedules/stage_a_remaining.sch
+Writing to Programs/Bytecode/stage_a_remaining-0.bc
+Hash: 72426d5dd26bd50b106eaac9d3867592a07da6fdd2b86c38f59e67cee5fbaff7
+Program requires at most:
+           9 integer inputs from player 0
+         422 integer 3-way splits
+         209 integer 3-way split rounds
+       55012 bit triples
+         684 integer bit2As
+         441 integer bit2A rounds
+         646 integer triples
+         646 integer simple multiplications
+         152 integer probabilistic truncations
+         194 integer cut randoms
+         496 bit opens
+          13 integer opens
+         371 virtual machine rounds
+Expected communication is 0.0592855 MB online and 0 MB offline.
+Running program...
+Running /home/abdelmonem/MP-SPDZ/Scripts/../replicated-ring-party.x 0 stage_a_remaining -pn 14332 -h localhost
+Running /home/abdelmonem/MP-SPDZ/Scripts/../replicated-ring-party.x 1 stage_a_remaining -pn 14332 -h localhost
+Running /home/abdelmonem/MP-SPDZ/Scripts/../replicated-ring-party.x 2 stage_a_remaining -pn 14332 -h localhost
+Trying to run 64-bit computation
+softmax=[0.705368, 0.259491, 0.0351257]
+probability_sum=0.999985 cross_entropy=0.348938
+sampler_successes=3 range_and_wrong_label_ok=1
+test_offsets=[2, 2, 7] wrong_labels=[2, 6, 6]
+The following benchmarks are including preprocessing (offline phase).
+Time = 0.0977339 seconds 
+Data sent = 0.01976 MB in ~1261 rounds (party 0 only; use '-v' for more details)
+Global data sent = 0.060352 MB (all parties)
+The computation domain is too small for low-round truncation; it would need to have at least 103 bits.

@@ -1,0 +1,26 @@
+framework:
+  name: MP-SPDZ
+  version: "v0.4.4"
+  commit: "113c4e47dd94bca9ecab029d2f0abe649bea5c52"
+protocol:
+  name: Rep3 Ring
+  parties: 3
+  security_model: semi-honest
+  majority_assumption: honest majority
+  status: provisional
+arithmetic:
+  domain: ring
+  fixed_point_type: sfix
+  precision_f: 16
+  precision_k: 31
+compiler:
+  memory_order: true
+  command_flags: "-M -E ring"
+runtime:
+  environment_variable: MP_SPDZ_ROOT
+  local_parties: 3
+  host: localhost
+  port: 14780
+notes:
+  - "MASCOT evidence is a separate two-party tutorial and is not the project training protocol."
+  - "The stored Tiny BP output used a different historical source name; source identity is unresolved."

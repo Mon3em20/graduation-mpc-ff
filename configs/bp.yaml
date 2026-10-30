@@ -1,0 +1,29 @@
+# Reference configuration; the baseline script currently uses its module constants.
+dataset:
+  name: MNIST
+  train_samples: 5000
+  validation_samples: 1000
+  test_samples: 1000
+  test_indices: "seeded official-test positions 1000:2000"
+model:
+  architecture: "784-128-128-10"
+  activation: ReLU
+optimizer:
+  name: SGD
+  learning_rate: 0.05
+  batch_size: 128
+loss: cross_entropy
+epochs: 5
+seeds: [42, 43, 44, 45, 46]
+profiles:
+  project_baseline:
+    epochs: 5
+    train_samples: 5000
+    validation_samples: 1000
+  source_aligned_reference:
+    epochs: 20
+    train_samples: 50000
+    validation_samples: 10000
+    test_samples: 9000
+    seeds: [42, 43, 44]
+    reference_id: hinton_bp_audit_v2

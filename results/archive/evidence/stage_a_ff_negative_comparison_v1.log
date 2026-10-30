@@ -1,0 +1,7 @@
+FF negative comparison variant=uniform_random_control seed=42: fixed60_val=70.93% fixed60_test=72.80% best_epoch=1 best_val=73.58% best_test=75.30% train=857.7s
+FF negative comparison variant=neutral_softmax_hard seed=42: fixed60_val=70.22% fixed60_test=72.20% best_epoch=1 best_val=73.15% best_test=74.92% train=859.1s
+FF negative comparison variant=uniform_random_control seed=43: fixed60_val=69.79% fixed60_test=72.06% best_epoch=1 best_val=73.66% best_test=75.74% train=836.1s
+FF negative comparison variant=neutral_softmax_hard seed=43: fixed60_val=67.63% fixed60_test=69.92% best_epoch=1 best_val=71.43% best_test=74.14% train=835.6s
+FF negative comparison variant=uniform_random_control seed=44: fixed60_val=73.58% fixed60_test=75.16% best_epoch=1 best_val=74.94% best_test=76.82% train=844.9s
+FF negative comparison variant=neutral_softmax_hard seed=44: fixed60_val=71.85% fixed60_test=73.79% best_epoch=1 best_val=74.33% best_test=75.98% train=869.0s
+Appended 1448 negative-comparison records to /home/abdelmonem/graduation-mpc-ff/results/ff_mnist_results.csv; preserved 2005 prior rows
