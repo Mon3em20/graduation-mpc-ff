@@ -1,0 +1,49 @@
+{
+  "status": "bounded-runtime-complete",
+  "program": "bp_train.mpc",
+  "protocol": "Rep3 Ring",
+  "parties": 3,
+  "precision": "sfix(16,31)",
+  "architecture": "784-8-10",
+  "parameter_count": 6370,
+  "loss": "cross-entropy",
+  "output": "stable softmax",
+  "input_format": "text Input-P<party>-0, flattened scalar order",
+  "selection": "seeded stratified MNIST: 9 train, 3 validation, 3 test per class globally",
+  "ownership": "sample index modulo 3; balanced per split",
+  "train": 90,
+  "validation": 30,
+  "test": 30,
+  "epochs": 3,
+  "updates_per_epoch": 30,
+  "diagnostics": "aggregate-only",
+  "execution": {
+    "exit_status": 0,
+    "runtime_seconds": 40.81,
+    "updates": 90,
+    "epochs": 3,
+    "validation_loss": 2.61444,
+    "validation_correct": 3,
+    "test_loss": 2.48322,
+    "test_correct": 3,
+    "total_per_split": 30,
+    "global_data_sent_mb": 10045.7,
+    "party_data_sent_mb": 3348.61,
+    "runtime_log": "runtime.log",
+    "runtime_log_sha256": "e01936296ec2b7c771e93a20a46fead24b3d7d2e42826127d67c17b996c2c314"
+  },
+  "compile": {
+    "exit_status": 0,
+    "seconds": 66.70,
+    "reported_instructions": 900000,
+    "vm_rounds": 37778,
+    "bytecode": "external MP-SPDZ Programs/Bytecode/bp_train-0.bc",
+    "schedule": "external MP-SPDZ Programs/Schedules/bp_train.sch"
+  },
+  "input_hashes": {
+    "Input-P0-0": "eb7155b9a6e5c2e14c6f482432fd4f9a124fbf729777ebfd9fd28aae569cd931",
+    "Input-P1-0": "a5c093e33eaa3ede3996bca9c6523d3ce66860852f726215781ae5b3eedf5ffe",
+    "Input-P2-0": "dbfd5e87e876da885aa99b25edfae0ebc4ef2e376f0105bf5264c6e07bbfa932"
+  },
+  "validation_note": "The complete three-party 90-update run succeeded. The source has no separate one-update or 30-update mode; those intermediate results are not claimed independently."
+}

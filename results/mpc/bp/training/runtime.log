@@ -1,0 +1,32 @@
+Trying to run 64-bit computation
+epoch=1 train_loss=113.964
+epoch=2 train_loss=24.1647
+epoch=3 train_loss=3.45412
+validation loss=2.61444 correct=3 total=30
+test loss=2.48322 correct=3 total=30
+The following benchmarks are including preprocessing (offline phase).
+Time = 40.81 seconds 
+Data sent = 3348.61 MB in ~113750 rounds (party 0 only; use '-v' for more details)
+Global data sent = 10045.7 MB (all parties)
+This program might benefit from some protocol options.
+Consider adding the following at the beginning of your code:
+	program.use_trunc_pr = True
+	program.use_split(3)
+Trying to run 64-bit computation
+The following benchmarks are including preprocessing (offline phase).
+Time = 40.81 seconds 
+Data sent = 3348.56 MB in ~73452 rounds (party 1 only; use '-v' for more details)
+Global data sent = 10045.7 MB (all parties)
+This program might benefit from some protocol options.
+Consider adding the following at the beginning of your code:
+	program.use_trunc_pr = True
+	program.use_split(3)
+Trying to run 64-bit computation
+The following benchmarks are including preprocessing (offline phase).
+Time = 40.81 seconds 
+Data sent = 3348.56 MB in ~113750 rounds (party 2 only; use '-v' for more details)
+Global data sent = 10045.7 MB (all parties)
+This program might benefit from some protocol options.
+Consider adding the following at the beginning of your code:
+	program.use_trunc_pr = True
+	program.use_split(3)

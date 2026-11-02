@@ -1,0 +1,30 @@
+protocol:
+  name: Rep3 Ring
+  parties: 3
+  security_model: semi-honest
+  framework: MP-SPDZ
+  command_flags: "-M -E ring"
+arithmetic:
+  fixed_point_type: sfix
+  precision_k: 31
+  precision_f: 16
+model:
+  architecture: "784-8-10"
+  activation: ReLU
+  loss: cross-entropy
+  output: "stable softmax"
+  parameter_count: 6370
+  optimizer: SGD
+  learning_rate: 0.05
+data:
+  dataset: MNIST
+  train_samples: 90
+  validation_samples: 30
+  test_samples: 30
+  batch_size: 3
+  updates_per_epoch: 30
+  epochs: 3
+  split_seed: 42
+  ownership: "fixed balanced partition (30 train, 10 validation, 10 test per party)"
+diagnostics:
+  disclosure: aggregate-only

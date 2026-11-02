@@ -1,0 +1,64 @@
+{
+  "run_id": "A1-corrected-relu",
+  "status": "bounded-runtime-complete",
+  "source_change": "strict ReLU derivative (0 < pre[j])",
+  "program": "bp_train.mpc",
+  "framework": "MP-SPDZ v0.4.4",
+  "mp_spdz_commit": "113c4e47dd94bca9ecab029d2f0abe649bea5c52",
+  "protocol": "Rep3 Ring",
+  "parties": 3,
+  "ring_bits": 64,
+  "precision": "sfix(16,31)",
+  "architecture": "784-8-10",
+  "parameter_count": 6370,
+  "train": 90,
+  "validation": 30,
+  "test": 30,
+  "epochs": 3,
+  "updates": 90,
+  "batch_size": 3,
+  "learning_rate": 0.05,
+  "input_hashes": {
+    "Input-P0-0": "eb7155b9a6e5c2e14c6f482432fd4f9a124fbf729777ebfd9fd28aae569cd931",
+    "Input-P1-0": "a5c093e33eaa3ede3996bca9c6523d3ce66860852f726215781ae5b3eedf5ffe",
+    "Input-P2-0": "dbfd5e87e876da885aa99b25edfae0ebc4ef2e376f0105bf5264c6e07bbfa932"
+  },
+  "compile": {
+    "exit_status": 0,
+    "reported_instructions": 900000,
+    "vm_rounds": 40508,
+    "probabilistic_truncations": 7424425,
+    "integer_triples": 4609470
+  },
+  "execution": {
+    "exit_status": 0,
+    "runtime_seconds": 6.99069,
+    "global_data_sent_mb": 353.975,
+    "party_data_sent_mb": 98.2271,
+    "runtime_rounds_party0": 59564,
+    "epoch_losses": [
+      113.964,
+      24.1644,
+      3.4539
+    ],
+    "validation_loss": 2.61574,
+    "validation_correct": 3,
+    "test_loss": 2.483,
+    "test_correct": 3,
+    "total_per_split": 30,
+    "runtime_log": "corrected_runtime.log",
+    "runtime_log_sha256": "13899e8e4e494a522ab0cdb1782afe630572b4184eba4b5fe3fbfa09735b693c"
+  },
+  "comparison_to_a0": {
+    "a0_epoch_losses": [
+      113.964,
+      24.1647,
+      3.45412
+    ],
+    "a0_validation_loss": 2.61444,
+    "a0_test_loss": 2.48322,
+    "a0_validation_correct": 3,
+    "a0_test_correct": 3
+  },
+  "privacy_note": "Uses the retained runtime defaults use_trunc_pr=True and use_split(3); no zero-leakage or universal-composability claim."
+}

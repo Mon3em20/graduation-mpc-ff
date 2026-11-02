@@ -7,7 +7,7 @@ protocol:
   parties: 3
   security_model: semi-honest
   majority_assumption: honest majority
-  status: provisional
+  status: selected after Stage A feasibility
 arithmetic:
   domain: ring
   fixed_point_type: sfix

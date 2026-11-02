@@ -20,15 +20,33 @@ by function.
 - **Objective:** validate fixed-point BP mechanics and ReLU edge behavior.
 - **Deliverables:** isolated 2-2-1 programs and independent verification.
 - **Verified work:** preserved outputs pass the two checkers.
-- **Status:** Completed for microtests; not end-to-end training.
-- **Remaining/blockers:** implement and validate secure MNIST BP.
+- **Status:** Bounded Secure BP A1-relu-corrected is complete as an engineering run;
+  Stage B remains **PARTIAL** for the final security claim.
+- **Verified work:** the corrected strict ReLU boundary was executed inside
+  pinned three-party Rep3 MPC with `[-1, 0, 1]` and returned
+  `[0, 0, 1]`; the corrected 90-update A1-relu-corrected run completed and
+  passed aggregate verification. A0-original remains preserved as historical
+  evidence.
+- **Remaining/blockers:** the probabilistic-truncation claim is limited to
+  the qualified stand-alone modified functionality described in the security
+  memo; no zero-leakage or UC claim is made. Formal all-workload overflow
+  proof is also unavailable.
 
 ## Stage C — Secure training
 
 - **Objective:** implement secure BP and FF training under the common setting.
 - **Deliverables:** scalable programs and utility evidence.
-- **Status:** Not Started.
-- **Remaining/blockers:** protocol confirmation and implementation.
+- **Status:** Bounded Secure BP prototype verified; stage remains incomplete.
+- **Verified work:** the 784-8-10 three-party Rep3 BP run completed 90 updates,
+  matched the bounded FP64 reference at aggregate level, and passed public
+  synthetic operation checks. The measured result remains a bounded feasibility
+  artifact, not full-dataset training or production-scale validation.
+- **Remaining/blockers:** explicit approval of probabilistic-truncation
+  leakage, broader numerical/overflow guarantees, and subsequent project
+  scope decisions. A corrected A1-relu-corrected full run is now preserved
+  separately from A0-original and passed aggregate verification. These bounded
+  runs are not formal performance benchmarks; per-operation MPC profiling
+  remains a separate future activity.
 
 ## Stage D — Cost profiling
 

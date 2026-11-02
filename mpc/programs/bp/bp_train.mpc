@@ -1,0 +1,105 @@
+"""Bounded secure 784-8-10 BP training with stable softmax cross-entropy."""
+import math
+from Compiler import ml
+from Compiler.library import for_range_opt
+from Compiler.mpc_math import log_fx
+
+sfix.set_precision(16, 31)
+TRAIN, VALIDATION, TEST = 90, 30, 30
+BATCH, EPOCHS = 3, 3
+LR = sfix(0.05)
+
+w1 = sfix.Matrix(784, 8)
+w1.input_from(0, binary=False)
+b1 = sfix.Array(8)
+b1.input_from(0, binary=False)
+w2 = sfix.Matrix(8, 10)
+w2.input_from(0, binary=False)
+b2 = sfix.Array(10)
+b2.input_from(0, binary=False)
+
+
+def forward(x):
+    hidden_pre = [sum(w1[i][j] * x[i] for i in range(784)) + b1[j]
+                  for j in range(8)]
+    hidden = [ml.relu(value) for value in hidden_pre]
+    output = [sum(w2[j][k] * hidden[j] for j in range(8)) + b2[k]
+              for k in range(10)]
+    # ml.softmax shifts by a secret maximum before exponentiating.
+    probabilities = ml.softmax(output)
+    return hidden_pre, hidden, output, probabilities
+
+
+def cross_entropy(output, probabilities, target):
+    # log-sum-exp uses the same stabilized shift as ml.softmax.
+    shifted_exp, shift = ml.exp_for_softmax(output)
+    log_sum_exp = shift + log_fx(sum(shifted_exp), math.e)
+    return -(sum(target[k] * output[k] for k in range(10)) - log_sum_exp)
+
+
+def train_epoch():
+    loss_total = sfix(0)
+    x0, x1, x2 = (sfix.Array(784) for _ in range(3))
+    y0, y1, y2 = (sfix.Array(10) for _ in range(3))
+    @for_range_opt(TRAIN // BATCH, budget=1000)
+    def _(batch_start):
+        dw1 = [[sfix(0) for _ in range(8)] for _ in range(784)]
+        db1 = [sfix(0) for _ in range(8)]
+        dw2 = [[sfix(0) for _ in range(10)] for _ in range(8)]
+        db2 = [sfix(0) for _ in range(10)]
+        for x, target, owner in ((x0, y0, 0), (x1, y1, 1), (x2, y2, 2)):
+            x.input_from(owner, binary=False)
+            target.input_from(owner, binary=False)
+            pre, hidden, output, probabilities = forward(x)
+            error = [probabilities[k] - target[k] for k in range(10)]
+            loss_total.update(loss_total + cross_entropy(output, probabilities, target))
+            dhidden = [sum(error[k] * w2[j][k] for k in range(10))
+                       for j in range(8)]
+            dpre = [dhidden[j] * (0 < pre[j]) for j in range(8)]
+            for j in range(8):
+                db1[j] += dpre[j]
+                for i in range(784):
+                    dw1[i][j] += dpre[j] * x[i]
+            for k in range(10):
+                db2[k] += error[k]
+                for j in range(8):
+                    dw2[j][k] += error[k] * hidden[j]
+        for i in range(784):
+            for j in range(8):
+                w1[i][j] -= LR * dw1[i][j] / BATCH
+        for j in range(8):
+            b1[j] -= LR * db1[j] / BATCH
+            for k in range(10):
+                w2[j][k] -= LR * dw2[j][k] / BATCH
+        for k in range(10):
+            b2[k] -= LR * db2[k] / BATCH
+    return loss_total
+
+
+def evaluate(count):
+    loss_total = sfix(0)
+    correct = sint(0)
+    x = sfix.Array(784)
+    target = sfix.Array(10)
+    @for_range_opt(count, budget=1000)
+    def _(sample):
+        owner = sample % 3
+        x.input_from(owner, binary=False)
+        target.input_from(owner, binary=False)
+        _, _, output, probabilities = forward(x)
+        loss_total.update(loss_total + cross_entropy(output, probabilities, target))
+        correct.update(correct + (ml.argmax(probabilities) == ml.argmax(target)))
+    return loss_total, correct
+
+
+for epoch in range(EPOCHS):
+    train_loss = train_epoch()
+    print_ln("epoch=%s train_loss=%s", epoch + 1, (train_loss / TRAIN).reveal())
+
+validation_loss, validation_correct = evaluate(VALIDATION)
+test_loss, test_correct = evaluate(TEST)
+print_ln("validation loss=%s correct=%s total=%s",
+         (validation_loss / VALIDATION).reveal(), validation_correct.reveal(),
+         VALIDATION)
+print_ln("test loss=%s correct=%s total=%s",
+         (test_loss / TEST).reveal(), test_correct.reveal(), TEST)
