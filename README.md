@@ -55,10 +55,11 @@ MP_SPDZ_ROOT="$HOME/MP-SPDZ" ./scripts/run_mpc.sh bp_tiny.mpc
 MP_SPDZ_ROOT="$HOME/MP-SPDZ" ./scripts/run_mpc.sh relu_edge.mpc
 ```
 
-The runner uses three-party semi-honest Rep3 Ring with the verified `-M -E
-ring` flags and stores logs in `results/mpc/bp/`. This is a provisional
-configuration. The programs are isolated fixed-point correctness checks, not
-secure MNIST BP or FF training.
+The runner uses the selected three-party semi-honest Rep3 Ring configuration
+with the verified `-M -E ring` flags and stores logs in `results/mpc/bp/`.
+The observed executions use a 64-bit ring and `sfix.set_precision(16,31)`
+with probabilistic truncation. The programs are isolated fixed-point
+correctness checks, not secure MNIST BP or FF training.
 
 ## Verification
 
@@ -76,8 +77,10 @@ and figures are under `results/benchmarks/plaintext/`. See the
 
 ## Current status and limitations
 
-Stage A plaintext/framework feasibility is **In Progress**. Tiny BP numerical
-microtests are complete, but they do not prove end-to-end secure training.
-Secure BP/FF training and per-operation Stage D profiling are **Not Started**.
-The Rep3 Ring choice remains provisional pending supervisor confirmation.
-MASCOT evidence is a separate tutorial and is not project training evidence.
+Stage A plaintext/framework feasibility is **COMPLETE (2026-11-02)** under the
+proposal-defined gate. Tiny BP numerical microtests and isolated primitive
+checks do not prove end-to-end secure training. Secure BP/FF training and
+per-operation Stage D profiling are **Not Started**. MASCOT evidence is a
+separate tutorial and is not project training evidence. The Stage A closure
+and its limitations are recorded in
+[the feasibility report](docs/reports/feasibility.md).

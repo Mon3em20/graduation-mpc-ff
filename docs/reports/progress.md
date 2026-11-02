@@ -9,9 +9,11 @@ by function.
 - **Deliverables:** baselines, source-aligned checks, MP-SPDZ feasibility logs.
 - **Verified work:** canonical CSVs, reference records, quickstart and
   primitive evidence are preserved in `results/archive/`.
-- **Status:** In Progress.
-- **Remaining/blockers:** supervisor decision on the bounded FF reference and
-  final protocol; no secure project training.
+- **Status:** **Complete (2026-11-02).**
+- **Closure:** the bounded Benchmark v1 and source-aligned BP/FF references
+  are accepted; the secure-operation inventory, primitive mapping, counters,
+  and final Rep3 Ring threat model are documented. This does not claim secure
+  project training or Stage D profiling.
 
 ## Stage B — Tiny secure BP
 

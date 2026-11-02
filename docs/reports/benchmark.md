@@ -41,6 +41,13 @@ epochs per layer. It has 116,992 trainable parameters. The difference is
 1,290 parameters, or 1.09% relative to BP. FF uses uniform random incorrect
 labels, and each layer receives positive and negative presentations.
 
+These settings are the standardized two-layer **Benchmark v1**. They must not
+be merged with the separate bounded source-aligned FF reference: that
+experiment uses four 128-unit layers and 60 epochs per layer. The reference
+experiment is retained to assess convergence behavior under a source-aligned
+reduced model; it is not a Benchmark v1 result or an exact reproduction of
+Hinton's four 2,000-unit-layer experiment.
+
 The original FF baseline evaluates both `all_layers` and
 `second_layer_only` candidate-scoring variants and selects the better variant
 on validation. Benchmark v1 intentionally defines a fixed `all_layers`
@@ -137,7 +144,8 @@ in `figures/accuracy.png`.
 
 Time per optimizer update is not a claim that FF updates are equivalent to BP
 updates: FF updates operate on local layer objectives and the complete FF run
-uses ten times as many minibatch optimizer updates. Similarly, time per
+uses twice as many minibatch optimizer updates and four times as many
+presentations. Similarly, time per
 original training sample uses all required presentations in the denominator
 and does not remove FF's negative work.
 
