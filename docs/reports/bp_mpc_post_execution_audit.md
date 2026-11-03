@@ -30,7 +30,10 @@ The inspected program has the following consistent dimensions and operations:
 - `w2`: 8 x 10, `b2`: 10; output logits and stabilized softmax.
 - One-hot targets are emitted in class-index order `0..9`.
 - The output error is `probabilities - target`.
-- Hidden backpropagation uses `error * w2^T` and `ml.relu_prime(pre)`.
+- A0-original hidden backpropagation used `error * w2^T` and
+  `ml.relu_prime(pre)`; A1-relu-corrected uses `error * w2^T` and the strict
+  derivative `(0 < pre[j])`. The strict derivative was separately verified
+  inside Rep3 MPC with public fixed-point inputs `[-1, 0, 1]`.
 - Both weight matrices and both bias vectors are updated.
 - Each update averages the accumulated three-example gradients by `BATCH`.
 - The learning rate is applied once, with `LR = 0.05`.
