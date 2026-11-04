@@ -1,70 +1,80 @@
 # Project progress
 
-Progress is mapped to proposal stages while the repository remains organized
-by function.
+This report uses the official proposal stages and the preserved repository
+evidence as of 2026-11-03.
 
-## Stage A — Plaintext and framework feasibility
+## Stage A - Environment and plaintext feasibility
 
-- **Objective:** establish reproducible BP/FF references and map MPC support.
-- **Deliverables:** baselines, source-aligned checks, MP-SPDZ feasibility logs.
-- **Verified work:** canonical CSVs, reference records, quickstart and
-  primitive evidence are preserved in `results/archive/`.
-- **Status:** **Complete (2026-11-02).**
-- **Closure:** the bounded Benchmark v1 and source-aligned BP/FF references
-  are accepted; the secure-operation inventory, primitive mapping, counters,
-  and final Rep3 Ring threat model are documented. This does not claim secure
-  project training or Stage D profiling.
+**Status: COMPLETE - 2026-11-02.**
 
-## Stage B — Tiny secure BP
+Plaintext BP/FF baselines, Benchmark v1 outputs, source-aligned references,
+MP-SPDZ feasibility evidence, the secure-operation inventory, and the selected
+Rep3 Ring setting are preserved. Stage A does not claim Secure FF, full-dataset
+MPC training, or Stage D profiling.
 
-- **Objective:** validate fixed-point BP mechanics and ReLU edge behavior.
-- **Deliverables:** isolated 2-2-1 programs and independent verification.
-- **Verified work:** preserved outputs pass the two checkers.
-- **Status:** Bounded Secure BP A1-relu-corrected is complete as an engineering run;
-  Stage B remains **PARTIAL** for the final security claim.
-- **Verified work:** the corrected strict ReLU boundary was executed inside
-  pinned three-party Rep3 MPC with `[-1, 0, 1]` and returned
-  `[0, 0, 1]`; the corrected 90-update A1-relu-corrected run completed and
-  passed aggregate verification. A0-original remains preserved as historical
-  evidence.
-- **Remaining/blockers:** the probabilistic-truncation claim is limited to
-  the qualified stand-alone modified functionality described in the security
-  memo; no zero-leakage or UC claim is made. Formal all-workload overflow
-  proof is also unavailable.
+## Stage B - Small end-to-end secure BP prototype
 
-## Stage C — Secure training
+**Status: COMPLETE - bounded Secure BP prototype.**
 
-- **Objective:** implement secure BP and FF training under the common setting.
-- **Deliverables:** scalable programs and utility evidence.
-- **Status:** Bounded Secure BP prototype verified; stage remains incomplete.
-- **Verified work:** the 784-8-10 three-party Rep3 BP run completed 90 updates,
-  matched the bounded FP64 reference at aggregate level, and passed public
-  synthetic operation checks. The measured result remains a bounded feasibility
-  artifact, not full-dataset training or production-scale validation.
-- **Remaining/blockers:** explicit approval of probabilistic-truncation
-  leakage, broader numerical/overflow guarantees, and subsequent project
-  scope decisions. A corrected A1-relu-corrected full run is now preserved
-  separately from A0-original and passed aggregate verification. These bounded
-  runs are not formal performance benchmarks; per-operation MPC profiling
-  remains a separate future activity.
+The proposal gate is supported by `A1-relu-corrected`:
 
-## Stage D — Cost profiling
+1. Complete input-to-output secure execution: 90 examples, 30 validation
+   examples, 30 test examples, three epochs, and 90 SGD updates completed.
+2. Runtime measurement: 6.99069 seconds is preserved in A1 metadata.
+3. Communication measurement: 353.975 MB global traffic, including
+   preprocessing, is preserved in A1 metadata.
+4. Agreement with plaintext emulation: matched FP64 aggregate losses and
+   correct counts are preserved in the BP audit.
 
-- **Objective:** measure communication, rounds, preprocessing, and runtime by operation.
-- **Verified work:** framework counters exist in feasibility evidence.
-- **Status:** Not Started.
-- **Remaining/blockers:** project-scale BP/FF programs are required; quickstart counters
-  are not Stage D profiling.
+`A0-original` remains the historical pre-correction run. Both runs use
+`784-8-10`, 64-bit Rep3 Ring, `sfix(16,31)`, and aggregate-only diagnostics.
+Their measurement coverage and schedules differ, so A0/A1 totals are not
+causally comparable.
 
-## Stage E — MPC-aware FF modification
+This is bounded evidence, not full-MNIST or production-scale Secure BP. It
+does not establish formal arbitrary-workload overflow safety, zero leakage,
+universal composability, or Stage D profiling.
 
-- **Objective:** investigate one evidence-driven FF modification.
-- **Verified work:** controlled hard-negative comparison is recorded.
-- **Status:** In Progress.
-- **Remaining/blockers:** select and evaluate a modification under measured MPC costs.
+### Comparison-readiness refinement
 
-## Stage F — Final comparison
+`BP-COMP-001` is a separate bounded reference run, not a new official stage.
+It preserves the selected 90/30/30 MNIST indices and party ownership while
+using deterministic per-party epoch shuffling and He/Xavier initialization.
+Its matched FP64 reference and aggregate secure outputs agree closely
+(validation `13/30`, test `14/30`). The five-seed utility and three-repetition
+timing requirements for the final BP-versus-FF comparison remain outstanding.
 
-- **Objective:** compare BP and FF fairly and report conclusions.
-- **Status:** Not Started.
-- **Remaining/blockers:** stages C–E and final supervisor decisions.
+## Stage C - Secure Forward-Forward
+
+**Status: NOT STARTED.**
+
+Secure FF remains future work: positive/negative secure passes, local
+goodness objectives, negative-data generation, normalization, layer-wise
+updates, and inference are not implemented.
+
+## Stage D - Profiling of BP and FF
+
+**Status: NOT STARTED.**
+
+Per-operation profiling must cover both secure BP and secure FF. Existing
+compiler counters, quickstart counters, and total run statistics are not
+Stage D profiling.
+
+## Stage E - Evidence-driven MPC-aware FF modification
+
+**Status: NOT STARTED.**
+
+The preliminary plaintext hard-negative comparison is not Stage E completion.
+After Stage D identifies a measured bottleneck, one MPC-aware modification,
+baseline comparison, ablation, and utility/privacy trade-off analysis are
+required.
+
+## Stage F - Additional mechanisms
+
+**Status: NOT STARTED - OPTIONAL.**
+
+SNNs, gating, selective activation, other datasets, and additional protocols
+begin only after mandatory Stages A-E.
+
+The final BP-versus-FF performance comparison is a mandatory future
+cross-stage outcome, not Stage F.

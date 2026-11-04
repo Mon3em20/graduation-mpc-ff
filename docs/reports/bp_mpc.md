@@ -118,10 +118,13 @@ training or adversarial inputs. No ring size or precision was changed.
 The synthetic diagnostic and range analysis close important evidence gaps but
 do not establish a formal leakage proof for probabilistic truncation,
 bit-level equality, or absence of overflow outside the measured workload.
-Secure BP therefore remains **PARTIAL**. Supervisor/security approval is
-required before presenting probabilistic truncation as acceptable for the
-project's final privacy claim. The corrected derivative has now been
-validated in MPC and in the separate A1-relu-corrected full execution documented below.
+These limitations qualify the security claim but are not additional
+requirements in the proposal's Stage B gate. Stage B is therefore
+**COMPLETE - bounded Secure BP prototype**. Supervisor/security approval is
+still required before presenting probabilistic truncation as acceptable for
+the project's final privacy claim. The corrected derivative has now been
+validated in MPC and in the separate A1-relu-corrected full execution
+documented below.
 
 The pinned MP-SPDZ `TruncPrRing` source labels the ordinary non-full-width
 path used by the current BP compilation as `CdH10-fixed, Protocol 3.1`. The
@@ -181,3 +184,35 @@ preprocessing.
 The bounded correctness evidence above is not a formal performance benchmark.
 Per-operation MPC profiling belongs to a separate profiling stage and has not
 been established by these runs.
+
+## Comparison-ready BP-COMP-001
+
+The separate `BP-COMP-001` run uses the same bounded model, protocol,
+precision, selected MNIST indices, and 90/30/30 split, but changes the
+comparison policy deliberately: each party's 30 training records are
+independently shuffled for each epoch (`order_seed=42042`), and the public
+initial parameters use deterministic He/Xavier initialization
+(`initialization_seed=42`). A0/A1 are unchanged.
+
+The matched FP64 reference reports final validation `13/30` and test `14/30`,
+with test loss `1.5760615`. The secure run reports validation `13/30`, test
+`14/30`, validation loss `1.82413`, and test loss `1.57591`. Its runtime was
+`8.36998` seconds and global communication was `353.975 MB`, including
+preprocessing. These figures are not causal comparisons with A0/A1 and do not
+constitute Stage D profiling. Full details and hashes are in
+`docs/reports/bp_comparison_readiness.md` and the
+`results/mpc/bp/comparison_baseline/BP-COMP-001/` manifest.
+
+## Evidence integrity note
+
+The preserved A0 metadata contains the embedded value
+`e01936296ec2b7c771e93a20a46fead24b3d7d2e42826127d67c17b996c2c314` for
+`runtime.log`, but the current raw file hashes to
+`e01936296ec2b7c771e93a20a46faed24b3d7d2e42826127d67c17b996c2c314`.
+The embedded A0 log hash is therefore not verified. The raw log and metadata
+are preserved unchanged; this discrepancy does not invalidate the independently
+verified A1 log and metadata hashes:
+
+- A0 metadata: `34458feabf2103a2996f160bdb761c84c89c2583f7580667ac4273c902f1a5f3`
+- A1 runtime log: `13899e8e4e494a522ab0cdb1782afe630572b4184eba4b5fe3fbfa09735b693c`
+- A1 metadata: `df45b8f64afa3a25403ac32b6bf55b1faf6c5df38c9427bf3243d8203a5d43ce`

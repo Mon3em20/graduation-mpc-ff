@@ -1,0 +1,99 @@
+Default bit length for compilation: 63
+Default security parameter for compilation: 40
+Compiling file Programs/Source/bp_train.mpc
+Compiled 100000 lines at Wed Nov  4 00:09:51 2026
+Compiled 200000 lines at Wed Nov  4 00:09:54 2026
+Compiled 300000 lines at Wed Nov  4 00:09:56 2026
+Compiled 400000 lines at Wed Nov  4 00:09:59 2026
+Compiled 500000 lines at Wed Nov  4 00:10:02 2026
+Merging 18816 muls in round 3/59
+Merging 18816 TruncPr in round 4/59
+Merging 12632 muls in round 55/59
+Merging 12632 TruncPr in round 56/59
+Merging 18816 muls in round 3/59
+Merging 18816 TruncPr in round 4/59
+Merging 12632 muls in round 55/59
+Merging 12632 TruncPr in round 56/59
+Merging 18816 muls in round 3/59
+Merging 18816 TruncPr in round 4/59
+Merging 12632 muls in round 55/59
+Merging 12632 TruncPr in round 56/59
+Writing to Programs/Bytecode/bp_train-TruncPr(18816)_47_16-1.bc
+Compiled 600000 lines at Wed Nov  4 00:10:18 2026
+Writing to Programs/Bytecode/bp_train-LTZ(48)_32-3.bc
+Writing to Programs/Bytecode/bp_train-TruncPr(240)_47_16-5.bc
+Writing to Programs/Bytecode/bp_train-LTZ(30)_32-6.bc
+Writing to Programs/Bytecode/bp_train-LTZ(12)_32-7.bc
+Writing to Programs/Bytecode/bp_train-LTZ(6)_32-8.bc
+Writing to Programs/Bytecode/bp_train-LTZ(60)_32-9.bc
+Writing to Programs/Bytecode/bp_train-TruncPr(60)_45_14-10.bc
+Writing to Programs/Bytecode/bp_train-exp2_fx(60)_31_16_False-12.bc
+Writing to Programs/Bytecode/bp_train-AppRcr(3)_31_16_False_False-14.bc
+Writing to Programs/Bytecode/bp_train-log2_fx(3)_31_16-16.bc
+Writing to Programs/Bytecode/bp_train-TruncPr(3)_46_15-18.bc
+Writing to Programs/Bytecode/bp_train-TruncPr(30)_63_16-20.bc
+Writing to Programs/Bytecode/bp_train-TruncPr(30)_47_16-22.bc
+Writing to Programs/Bytecode/bp_train-TruncPr(30)_63_32-23.bc
+Writing to Programs/Bytecode/bp_train-TruncPr(1)_62_32-25.bc
+Writing to Programs/Bytecode/bp_train-TruncPr(10)_63_32-27.bc
+Writing to Programs/Bytecode/bp_train-TruncPr(2)_62_32-28.bc
+Writing to Programs/Bytecode/bp_train-TruncPr(20)_63_32-29.bc
+Writing to Programs/Bytecode/bp_train-TruncPr(160)_47_16-30.bc
+Writing to Programs/Bytecode/bp_train-TruncPr(6272)_47_16-31.bc
+Writing to Programs/Bytecode/bp_train-TruncPr(330)_47_16-32.bc
+Writing to Programs/Bytecode/bp_train-TruncPr(12632)_47_16-33.bc
+Writing to Programs/Bytecode/bp_train-FPDiv(6370)_31_16-34.bc
+Writing to Programs/Bytecode/bp_train-FPDiv(1)_31_16-36.bc
+Compiled 700000 lines at Wed Nov  4 00:10:20 2026
+Writing to Programs/Bytecode/bp_train-LTZ(13)_32-37.bc
+Writing to Programs/Bytecode/bp_train-TruncPr(80)_47_16-38.bc
+Writing to Programs/Bytecode/bp_train-LTZ(5)_32-39.bc
+Writing to Programs/Bytecode/bp_train-LTZ(3)_32-40.bc
+Writing to Programs/Bytecode/bp_train-LTZ(2)_32-41.bc
+Writing to Programs/Bytecode/bp_train-LTZ(20)_32-42.bc
+Writing to Programs/Bytecode/bp_train-TruncPr(20)_45_14-43.bc
+Writing to Programs/Bytecode/bp_train-exp2_fx(20)_31_16_False-44.bc
+Writing to Programs/Bytecode/bp_train-AppRcr(1)_31_16_False_False-45.bc
+Writing to Programs/Bytecode/bp_train-log2_fx(1)_31_16-46.bc
+Writing to Programs/Bytecode/bp_train-TruncPr(1)_46_15-47.bc
+Writing to Programs/Bytecode/bp_train-TruncPr(10)_63_16-48.bc
+Writing to Programs/Bytecode/bp_train-LTZ(1)_32-49.bc
+Writing to Programs/Bytecode/bp_train-TruncPr(10)_47_16-50.bc
+Writing to Programs/Bytecode/bp_train-EQZ(1)_63-51.bc
+Compiled 800000 lines at Wed Nov  4 00:10:21 2026
+Writing to Programs/Bytecode/bp_train-FPDiv(2)_31_16-53.bc
+Compiled 900000 lines at Wed Nov  4 00:10:29 2026
+Writing to Programs/Schedules/bp_train.sch
+Writing to Programs/Bytecode/bp_train-0.bc
+Hash: 17ca9ded9d42b3e2b0bc1e024476412ef93be693d57526fb7fc48f4da44b6868
+Program requires at most:
+         inf integer inputs from player 0
+     7424425 integer probabilistic truncations
+           7 integer opens
+       71460 integer inputs from player 1
+       71460 integer inputs from player 2
+     4609470 integer triples
+     4609470 integer simple multiplications
+       28380 integer 3-way splits
+        2850 integer 3-way split rounds
+     3453060 bit triples
+       79200 integer bit2As
+        8850 integer bit2A rounds
+         660 integer cut randoms
+       74400 bit opens
+       40508 virtual machine rounds
+Running program...
+Running /home/abdelmonem/MP-SPDZ/Scripts/../replicated-ring-party.x 0 bp_train -pn 18440 -h localhost
+Running /home/abdelmonem/MP-SPDZ/Scripts/../replicated-ring-party.x 1 bp_train -pn 18440 -h localhost
+Running /home/abdelmonem/MP-SPDZ/Scripts/../replicated-ring-party.x 2 bp_train -pn 18440 -h localhost
+Trying to run 64-bit computation
+epoch=1 train_loss=2.24889
+epoch=2 train_loss=1.95888
+epoch=3 train_loss=1.68115
+validation loss=1.82413 correct=13 total=30
+test loss=1.57591 correct=14 total=30
+The following benchmarks are including preprocessing (offline phase).
+Time = 8.36998 seconds 
+Data sent = 98.2271 MB in ~59564 rounds (party 0 only; use '-v' for more details)
+Global data sent = 353.975 MB (all parties)
+The computation domain is too small for low-round truncation; it would need to have at least 103 bits.

@@ -1,0 +1,11 @@
+"""Reproducible strict ReLU derivative boundary diagnostic."""
+from Compiler import ml
+
+sfix.set_precision(16, 31)
+pre = [sfix.input_tensor_via(0, [value])[0] for value in (-1.0, 0.0, 1.0)]
+relu = [ml.relu(value) for value in pre]
+derivative = [(0 < value) for value in pre]
+
+print_ln("pre=%s", [value.reveal() for value in pre])
+print_ln("relu=%s", [value.reveal() for value in relu])
+print_ln("relu_derivative=%s", [value.reveal() for value in derivative])

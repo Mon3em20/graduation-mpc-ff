@@ -1,86 +1,136 @@
 # Biologically Plausible Secure MPC for Privacy-Preserving AI Training
 
-This research repository compares plaintext Backpropagation (BP) and
-Forward-Forward (FF) under a common MNIST methodology, then investigates
-secure training and one MPC-aware FF modification. The research question is:
-how do secure BP and secure FF compare in utility, computation, communication,
-and protocol overhead under the same MPC setting?
+This repository compares plaintext Backpropagation (BP) and Forward-Forward
+(FF), then studies their secure-computation costs under a common MPC setting.
+The research question is how BP and FF compare in utility, computation, and
+communication when private training is required.
 
-## Repository
+## Project overview
+
+The repository contains reproducible plaintext baselines, a standardized
+Benchmark v1, and secure BP evidence. Secure FF, joint BP/FF profiling, and an
+MPC-aware FF modification are future work under the proposal's staged plan.
+The secure BP result is deliberately bounded; it is not a full-MNIST or
+production-scale claim.
+
+## Current implementation
+
+### Plaintext implementations
+
+- [`src/baselines/bp.py`](src/baselines/bp.py) implements the project BP
+  baseline: a `784-128-128-10` ReLU network, cross-entropy, SGD with learning
+  rate `0.05`, batch size `128`, five epochs, and 5,000/1,000/1,000
+  train/validation/test examples across seeds 42-46.
+- [`src/baselines/ff.py`](src/baselines/ff.py) implements greedy local FF
+  training with 128-unit layers, L2 normalization, threshold `2.0`, per-layer
+  SGD at learning rate `0.01`, batch size `128`, five epochs per layer, and
+  uniform incorrect-label negatives. It also preserves the
+  neutral-softmax hard-negative comparison.
+
+Benchmark v1 is stored under `results/benchmarks/plaintext/`. Its BP profile
+is `784-128-128-10`; its standardized FF profile uses two 128-unit layers,
+all-layer inference, and the source default threshold. The four-layer,
+60-epoch source-aligned FF reference is separate evidence, not Benchmark v1.
+
+### Secure MPC implementations
+
+- [`mpc/programs/bp/bp_tiny.mpc`](mpc/programs/bp/bp_tiny.mpc) is an isolated
+  2-2-1 BP numerical test with deliberately revealed synthetic diagnostics.
+- [`mpc/programs/bp/relu_edge.mpc`](mpc/programs/bp/relu_edge.mpc) is an
+  isolated active/inactive ReLU branch test.
+- [`mpc/programs/bp/bp_train.mpc`](mpc/programs/bp/bp_train.mpc) is the
+  complete bounded `784-8-10` secure BP training program.
+
+The bounded BP program uses MP-SPDZ v0.4.4 at commit
+`113c4e47dd94bca9ecab029d2f0abe649bea5c52`, three-party semi-honest
+honest-majority Rep3 Ring, a 64-bit ring, and `sfix(16,31)`. It has 6,370
+parameters, a stable softmax cross-entropy objective, the strict ReLU
+derivative `(0 < pre[j])`, manual weight and bias gradients, SGD updates, and
+persistent model state.
+
+The deterministic MNIST subset contains 90 training, 30 validation, and 30
+test examples. It runs three epochs, 30 updates per epoch, batch size 3, and
+learning rate `0.05`. Each party owns 30/10/10 examples through
+sample-index-modulo-three assignment. Only aggregate loss and correct counts
+are opened.
+
+### Bounded Secure BP result
+
+The corrected `A1-relu-corrected` run completed compilation and execution,
+all 90 updates, and aggregate verification. Its preserved evidence is:
 
 ```text
-configs/              Reference experiment and MPC settings
-docs/                 Proposal, design, decisions, and progress reports
-src/baselines/        Plaintext BP and FF implementations
-mpc/programs/bp/      Implemented Tiny BP MPC microtests
-scripts/               MPC runner and independent verifiers
-tests/                Python regression and numerical-reference tests
-results/baselines/    Canonical BP and FF CSVs
-results/mpc/          Preserved Tiny BP execution logs
-results/archive/      Historical CSVs and raw feasibility evidence
+epoch=1 train_loss=113.964
+epoch=2 train_loss=24.1644
+epoch=3 train_loss=3.4539
+validation loss=2.61574 correct=3 total=30
+test loss=2.483 correct=3 total=30
+runtime=6.99069 seconds
+global communication=353.975 MB (including preprocessing)
 ```
 
-## Setup
+The historical `A0-original` run is also preserved. Its aggregate results,
+runtime, and communication are documented in
+[`docs/reports/bp_mpc.md`](docs/reports/bp_mpc.md). A0 and A1 measurement
+coverage and compiler schedules differ, so their totals are not comparable
+for a causal performance claim.
 
-The Python dependencies are listed in `requirements.txt`. MP-SPDZ is built
-separately and must not be installed as a pip dependency. The baseline scripts
-expect MNIST at `~/datasets/MNIST` and use a CPU PyTorch environment.
+`BP-COMP-001` is a separate comparison-ready run using the same selected
+MNIST indices with deterministic per-party epoch shuffling and He/Xavier
+initialization. It completed with validation `13/30`, test `14/30`, runtime
+`8.36998` seconds, and `353.975 MB` global preprocessing-inclusive traffic.
+Its exact inputs, initialization, FP64 reference, metadata, and logs are under
+`results/mpc/bp/comparison_baseline/BP-COMP-001/`. See the
+[comparison-readiness report](docs/reports/bp_comparison_readiness.md).
 
-```bash
-python -m pip install -r requirements.txt
-```
+## Experimental outputs
 
-## Plaintext baselines
+- `results/benchmarks/plaintext/` contains Benchmark v1 CSVs and figures.
+- `results/mpc/bp/` contains Tiny correctness logs and the bounded BP logs.
+- `results/mpc/bp/training/` contains A0/A1 metadata, aggregate runtime logs,
+  and the strict ReLU edge evidence.
+- `results/archive/` contains historical plaintext feasibility records and
+  Stage A evidence.
 
-These commands run the existing 5,000/1,000/1,000 project baselines and write
-to the canonical CSVs. They may take several minutes and download nothing.
+## Reproducing bounded Secure BP
 
-```bash
-python src/baselines/bp.py
-python src/baselines/ff.py
-```
+MNIST must already exist under `~/datasets/MNIST`; preparation uses
+`download=False`.
 
-The source-aligned 20/60-epoch checks are explicit opt-in commands:
-`python src/baselines/bp.py --reference-check` and
-`python src/baselines/ff.py --reference-check`. Historical records are
-preserved in the canonical files; no claim of paper reproduction is made.
+1. Run `python scripts/prepare_mpc_data.py --output-dir <input-dir>
+   --comparison-id BP-COMP-001 --shuffle-training
+   --initialization-method he_xavier --order-seed 42042
+   --initialization-seed 42`.
+2. Preserve the generated `metadata.json` and input hashes.
+3. Copy `Input-P0-0`, `Input-P1-0`, and `Input-P2-0` into the external
+   MP-SPDZ `Player-Data` directory.
+4. Set `MP_SPDZ_ROOT` and, if needed, `MP_SPDZ_PYTHON`.
+5. Run `scripts/run_mpc.sh bp_train.mpc` with a new unique log path.
+6. Run `python scripts/verify/verify_bp_training.py <new-log>`.
 
-## MPC
+The runner accepts an authoritative `.mpc` basename and optional log path,
+copies that source into external MP-SPDZ `Programs/Source`, and executes
+`-M -E ring`. It does not prepare or copy inputs and does not modify the
+framework source or keys. Do not reuse the historical A0 or A1 log paths.
 
-Set `MP_SPDZ_ROOT` to an external MP-SPDZ checkout and run an authoritative
-source through the safe runner:
+The Tiny checkers reveal synthetic intermediate values. The full training
+checker validates aggregate validation/test output presence and basic
+validity; it does not independently perform the matched FP64 comparison.
+That comparison is preserved in the BP audit.
 
-```bash
-MP_SPDZ_ROOT="$HOME/MP-SPDZ" ./scripts/run_mpc.sh bp_tiny.mpc
-MP_SPDZ_ROOT="$HOME/MP-SPDZ" ./scripts/run_mpc.sh relu_edge.mpc
-```
+## Current status
 
-The runner uses the selected three-party semi-honest Rep3 Ring configuration
-with the verified `-M -E ring` flags and stores logs in `results/mpc/bp/`.
-The observed executions use a 64-bit ring and `sfix.set_precision(16,31)`
-with probabilistic truncation. The programs are isolated fixed-point
-correctness checks, not secure MNIST BP or FF training.
+- **Stage A - Environment and plaintext feasibility:** COMPLETE -
+  2026-11-02.
+- **Stage B - Small end-to-end secure BP prototype:** COMPLETE - bounded
+  Secure BP prototype (`A1-relu-corrected`).
+- **Stage C - Secure Forward-Forward:** NOT STARTED.
+- **Stage D - Per-operation BP and FF profiling:** NOT STARTED.
+- **Stage E - Evidence-driven MPC-aware FF modification and ablation:** NOT
+  STARTED.
+- **Stage F - Optional mechanisms:** NOT STARTED; optional after Stages A-E.
 
-## Verification
-
-```bash
-python -m unittest discover -s tests -v
-python scripts/verify/verify_bp.py results/mpc/bp/bp_tiny.log
-python scripts/verify/verify_relu.py results/mpc/bp/relu_edge.log
-```
-
-The two checkers compare deliberately revealed diagnostics against independent
-plaintext references with tolerance `2e-4`. Results and raw feasibility logs
-are retained under `results/`; the standardized plaintext benchmark outputs
-and figures are under `results/benchmarks/plaintext/`. See the
-[benchmark report](docs/reports/benchmark.md) for methodology and results.
-
-## Current status and limitations
-
-Stage A plaintext/framework feasibility is **COMPLETE (2026-11-02)** under the
-proposal-defined gate. Tiny BP numerical microtests and isolated primitive
-checks do not prove end-to-end secure training. Secure BP/FF training and
-per-operation Stage D profiling are **Not Started**. MASCOT evidence is a
-separate tutorial and is not project training evidence. The Stage A closure
-and its limitations are recorded in
-[the feasibility report](docs/reports/feasibility.md).
+The final BP-versus-FF performance comparison is a mandatory future
+cross-stage outcome, not Stage F. Stage B completion does not imply full-MNIST
+training, production-scale Secure BP, Stage D profiling, Secure FF, or formal
+cryptographic proofs beyond the qualified truncation statement.

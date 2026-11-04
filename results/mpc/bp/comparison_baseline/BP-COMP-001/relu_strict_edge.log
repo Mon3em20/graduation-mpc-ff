@@ -1,0 +1,33 @@
+Default bit length for compilation: 63
+Default security parameter for compilation: 40
+Compiling file Programs/Source/relu_strict_edge.mpc
+Writing binary data to Player-Data/Input-Binary-P0-0
+Writing to Programs/Bytecode/relu_strict_edge-LTZ(6)_32-1.bc
+Writing to Programs/Schedules/relu_strict_edge.sch
+Writing to Programs/Bytecode/relu_strict_edge-0.bc
+Hash: 303ae5e638248ea222bfdcb424ec3735939822a15cecabb64479f42a604c5b14
+Program requires at most:
+           3 integer inputs from player 0
+           6 integer 3-way splits
+           1 integer 3-way split rounds
+         690 bit triples
+           6 integer bit2As
+           1 integer bit2A rounds
+           3 integer triples
+           3 integer simple multiplications
+           9 integer opens
+          10 virtual machine rounds
+Expected communication is 0.00071475 MB online and 0 MB offline.
+Running program...
+Running /home/abdelmonem/MP-SPDZ/Scripts/../replicated-ring-party.x 0 relu_strict_edge -pn 16374 -h localhost
+Running /home/abdelmonem/MP-SPDZ/Scripts/../replicated-ring-party.x 1 relu_strict_edge -pn 16374 -h localhost
+Running /home/abdelmonem/MP-SPDZ/Scripts/../replicated-ring-party.x 2 relu_strict_edge -pn 16374 -h localhost
+Trying to run 64-bit computation
+pre=[-1, 0, 1]
+relu=[0, 0, 1]
+relu_derivative=[0, 0, 1]
+The following benchmarks are including preprocessing (offline phase).
+Time = 0.00223509 seconds 
+Data sent = 0.000283 MB in ~11 rounds (party 0 only; use '-v' for more details)
+Global data sent = 0.000801 MB (all parties)
+Actual communication exceeds the compiler's expectation by 12 percent.

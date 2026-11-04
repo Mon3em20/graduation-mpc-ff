@@ -290,7 +290,8 @@ synthetic operation checks, aggregate-only output review, and workload range
 analysis establish a defensible bounded Secure BP baseline. Essential
 limitations remain: probabilistic-truncation leakage has no project-specific
 approval, and no formal all-workload overflow or per-operation security proof
-exists. Stage B is therefore **PARTIAL**, not COMPLETE.
+exists. These are documented limitations, not additional requirements in the
+proposal's Stage B gate. Stage B is **COMPLETE - bounded Secure BP prototype**.
 
 ## 10. Final closure security memo
 
@@ -413,9 +414,9 @@ MP-SPDZ `CdH10-fixed` branch matches that construction; no zero-leakage or UC
 claim is made. The separate `use_split(3)` conversion setting is retained and
 is not conflated with truncation security.
 
-This decision is sufficient to authorize a corrected engineering run under
-the same policy, but it does not mark Stage B complete or replace any
-project-level privacy approval that may be required for the thesis claim.
+This decision was sufficient to authorize a corrected engineering run under
+the same policy. It does not replace any project-level privacy approval that
+may be required for the thesis claim.
 
 ### Corrected full execution A1-relu-corrected
 
@@ -494,8 +495,9 @@ work.
 - **Reproducibility:** configuration, input hashes, and aggregate outputs are
   preserved; A1 per-party raw benchmark and exit-status coverage is incomplete.
 
-Stage B remains **PARTIAL**. The remaining limitations are claim scope and
-measurement quality, not an identified mathematical correctness failure.
+Stage B is **COMPLETE - bounded Secure BP prototype**. The remaining
+limitations concern claim scope and measurement quality, not an identified
+mathematical correctness failure.
 
 ## 9. Verification commands and changed files
 

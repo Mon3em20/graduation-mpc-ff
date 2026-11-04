@@ -1,0 +1,44 @@
+experiment_id: BP-COMP-001
+framework:
+  name: MP-SPDZ
+  version: "v0.4.4"
+  commit: "113c4e47dd94bca9ecab029d2f0abe649bea5c52"
+protocol:
+  name: Rep3 Ring
+  parties: 3
+  security_model: semi-honest
+  majority_assumption: honest majority
+  ring_bits: 64
+arithmetic:
+  fixed_point_type: sfix
+  precision_k: 31
+  precision_f: 16
+model:
+  architecture: "784-8-10"
+  parameter_count: 6370
+  activation: ReLU
+  loss: stable_softmax_cross_entropy
+  optimizer: SGD
+  learning_rate: 0.05
+  batch_size: 3
+  momentum: 0.0
+  weight_decay: 0.0
+data:
+  dataset: MNIST
+  selection_seed: 42
+  train_samples: 90
+  validation_samples: 30
+  test_samples: 30
+  ownership: sample_index_modulo_three
+  order_seed: 42042
+  order_policy: per_party_shuffle_per_epoch
+initialization:
+  method: he_xavier
+  seed: 42
+schedule:
+  epochs: 3
+  updates_per_epoch: 30
+  total_updates: 90
+diagnostics:
+  disclosure: aggregate_only
+  repeated_trial_requirement: "not satisfied by one comparison run"
