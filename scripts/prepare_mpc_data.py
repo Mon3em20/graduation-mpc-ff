@@ -1,6 +1,5 @@
 """Prepare deterministic, stratified MNIST inputs for bounded MPC jobs."""
 import argparse
-import hashlib
 import json
 import random
 import sys
@@ -13,6 +12,8 @@ from bp_training_reference import (  # noqa: E402
     DATASET_SEED, INITIALIZATION_SEED, ORDER_SEED, initialize, load_mnist,
     parameter_hash, parameter_payload, party_training_indices,
 )
+from secure_bp_input import input_hashes, write_values
+
 
 def load_records(seed):
     """Select 3 training, validation, and test records per class per party."""
@@ -53,10 +54,6 @@ def load_records(seed):
     return train_rows, validation_rows, test_rows, indices
 
 
-def write_tokens(streams, owner, values):
-    streams[owner].write(" ".join(str(float(value)) for value in values) + "\n")
-
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--output-dir", type=Path, required=True)
@@ -87,10 +84,10 @@ def main():
         # Text input: every scalar is consumed in program order by input_from.
         parameters = initialize(args.initialization_method,
                                 args.initialization_seed)
-        write_tokens(streams, 0, parameters[0])
-        write_tokens(streams, 0, parameters[1])
-        write_tokens(streams, 0, parameters[2])
-        write_tokens(streams, 0, parameters[3])
+        write_values(streams, 0, parameters[0])
+        write_values(streams, 0, parameters[1])
+        write_values(streams, 0, parameters[2])
+        write_values(streams, 0, parameters[3])
 
         def emit_training(rows, orders):
             by_index = {index: row for index, row in zip(indices["train"], rows)}
@@ -102,8 +99,8 @@ def main():
                     for owner in range(3):
                         index = epoch_order[owner][batch]
                         features, label = by_index[index]
-                        write_tokens(streams, owner, features)
-                        write_tokens(streams, owner,
+                        write_values(streams, owner, features)
+                        write_values(streams, owner,
                                     [float(j == label) for j in range(10)])
 
         emit_training(train, train_order)
@@ -111,8 +108,8 @@ def main():
         def emit_evaluation(rows):
             for sample, (features, label) in enumerate(rows):
                 owner = sample % 3
-                write_tokens(streams, owner, features)
-                write_tokens(streams, owner,
+                write_values(streams, owner, features)
+                write_values(streams, owner,
                             [float(j == label) for j in range(10)])
 
         emit_evaluation(validation)
@@ -120,10 +117,7 @@ def main():
     finally:
         for stream in streams:
             stream.close()
-    hashes = {}
-    for party in range(3):
-        path = args.output_dir / f"Input-P{party}-0"
-        hashes[path.name] = hashlib.sha256(path.read_bytes()).hexdigest()
+    hashes = input_hashes(args.output_dir)
     metadata = {
         "experiment_id": args.comparison_id or "historical-compatible",
         "configuration": ("configs/bp_comparison.yaml"

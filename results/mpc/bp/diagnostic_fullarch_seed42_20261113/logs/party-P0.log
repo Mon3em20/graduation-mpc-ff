@@ -1,0 +1,3 @@
+Trying to run 64-bit computation
+Fatal error in communication: read_some: stream truncated [asio.ssl.stream:1]. This is probably because party 1 encountered a problem.
+Fatal error at bp_matched_diagnostic-TruncPr(1)_47_16-1:1 (TRUNC_PR): error in receive thread

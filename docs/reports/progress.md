@@ -3,6 +3,21 @@
 This report uses the official proposal stages and the preserved repository
 evidence as of 2026-11-03.
 
+## Matched Secure BP preparation
+
+**Status: IMPLEMENTED, EXECUTION NOT YET CLAIMED.**
+
+`SECURE-BP-MATCHED-v1` is an additive `784-128-128-10` implementation
+matching the plaintext Benchmark v1 configuration. Its source,
+configuration, deterministic input generator, and focused tests are separate
+from the bounded Stage B `784-8-10` experiments. No runtime, communication,
+full-training, or five-seed result is attributed to this experiment until an
+actual MP-SPDZ run produces preserved evidence.
+
+The future bounded and matched source profiles now share the compile-time
+template in `mpc/programs/bp/bp_secure_template.mpc.in`. The historical
+`bp_train.mpc` source remains preserved as a compatibility snapshot.
+
 ## Stage A - Environment and plaintext feasibility
 
 **Status: COMPLETE - 2026-11-02.**

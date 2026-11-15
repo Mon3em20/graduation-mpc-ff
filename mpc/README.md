@@ -17,6 +17,16 @@ Set `MP_SPDZ_ROOT` to a pinned MP-SPDZ v0.4.4 checkout at commit
   bias gradients, SGD updates, and persistent parameters. It consumes three
   party input streams and reveals only aggregate validation/test losses and
   correct counts.
+- `programs/bp/bp_matched.mpc` is the additive
+  `SECURE-BP-MATCHED-v1` program. It trains the plaintext benchmark's
+  `784-128-128-10` model with the same five-epoch schedule and parameter
+  count. Generate its full-size input streams with
+  `scripts/prepare_secure_bp_matched.py`; do not overwrite the bounded
+  experiment's inputs or logs.
+- Both future profiles are rendered from
+  `programs/bp/bp_secure_template.mpc.in` with
+  `scripts/generate_secure_bp_program.py`. The historical `bp_train.mpc`
+  remains an immutable compatibility snapshot.
 
 All programs use the three-party semi-honest honest-majority Rep3 Ring
 protocol, a 64-bit ring, and `sfix(16,31)`. The full training run uses the

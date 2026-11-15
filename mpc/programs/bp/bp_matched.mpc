@@ -1,0 +1,154 @@
+"""Compile-time configurable secure BP implementation."""
+import math
+from Compiler import ml
+from Compiler.library import for_range_opt
+from Compiler.mpc_math import log_fx
+
+program.unlimited_compilation()
+sfix.set_precision(16, 31)
+LAYER_SIZES = [784, 128, 128, 10]
+TRAIN, VALIDATION, TEST = [5000, 1000, 1000]
+BATCH_SIZES = [128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 8]
+EPOCHS = 5
+LR = sfix(0.05)
+FULL_BATCH_SIZE = BATCH_SIZES[0]
+FULL_BATCHES = len(BATCH_SIZES) - 1
+FINAL_BATCH_SIZE = BATCH_SIZES[-1]
+LOOP_BUDGET = 100
+assert all(size == FULL_BATCH_SIZE for size in BATCH_SIZES[:-1])
+
+weights = [
+    sfix.Matrix(LAYER_SIZES[layer], LAYER_SIZES[layer + 1])
+    for layer in range(len(LAYER_SIZES) - 1)
+]
+biases = [sfix.Array(LAYER_SIZES[layer + 1])
+          for layer in range(len(LAYER_SIZES) - 1)]
+activations = [sfix.Array(size) for size in LAYER_SIZES]
+target_values = sfix.Array(LAYER_SIZES[-1])
+preactivations = [
+    sfix.Array(LAYER_SIZES[layer + 1])
+    for layer in range(len(weights))
+]
+deltas = [
+    sfix.Array(LAYER_SIZES[layer + 1])
+    for layer in range(len(weights))
+]
+weight_gradients = [
+    sfix.Matrix(LAYER_SIZES[layer], LAYER_SIZES[layer + 1])
+    for layer in range(len(weights))
+]
+bias_gradients = [
+    sfix.Array(LAYER_SIZES[layer + 1])
+    for layer in range(len(weights))
+]
+for layer in range(len(weights)):
+    weights[layer].input_from(0, binary=False)
+    biases[layer].input_from(0, binary=False)
+
+
+def forward():
+    for layer in range(len(weights)):
+        for j in range(LAYER_SIZES[layer + 1]):
+            preactivations[layer][j] = biases[layer][j]
+
+            @for_range_opt(LAYER_SIZES[layer], budget=LOOP_BUDGET)
+            def _(i):
+                preactivations[layer][j] += (
+                    weights[layer][i][j] * activations[layer][i])
+
+            if layer + 1 == len(weights):
+                activations[layer + 1][j] = preactivations[layer][j]
+            else:
+                activations[layer + 1][j] = ml.relu(
+                    preactivations[layer][j])
+    return activations[-1], ml.softmax(activations[-1])
+
+
+def cross_entropy(logits, target):
+    shifted_exp, shift = ml.exp_for_softmax(logits)
+    log_sum_exp = shift + log_fx(sum(shifted_exp), math.e)
+    return -(sum(target[k] * logits[k] for k in range(LAYER_SIZES[-1]))
+             - log_sum_exp)
+
+
+def reset_gradients():
+    for layer in range(len(weights)):
+        weight_gradients[layer].assign_all(0)
+        bias_gradients[layer].assign_all(0)
+
+
+def train_batch(batch_size, batch_start, loss_total):
+    reset_gradients()
+    @for_range_opt(batch_size, budget=LOOP_BUDGET)
+    def _(sample):
+        owner = (batch_start + sample) % 3
+        activations[0].input_from(owner, binary=False)
+        target_values.input_from(owner, binary=False)
+        logits, probabilities = forward()
+        loss_total.update(loss_total + cross_entropy(logits, target_values))
+
+        for k in range(LAYER_SIZES[-1]):
+            deltas[-1][k] = probabilities[k] - target_values[k]
+        for layer in reversed(range(len(weights) - 1)):
+            for j in range(LAYER_SIZES[layer + 1]):
+                deltas[layer][j] = 0
+
+                @for_range_opt(LAYER_SIZES[layer + 2], budget=LOOP_BUDGET)
+                def _(k):
+                    deltas[layer][j] += (
+                        deltas[layer + 1][k] * weights[layer + 1][j][k])
+
+                deltas[layer][j] *= (0 < preactivations[layer][j])
+
+        for layer in range(len(weights)):
+            for j in range(LAYER_SIZES[layer + 1]):
+                bias_gradients[layer][j] += deltas[layer][j]
+
+                @for_range_opt(LAYER_SIZES[layer], budget=LOOP_BUDGET)
+                def _(i):
+                    weight_gradients[layer][i][j] += (
+                        deltas[layer][j] * activations[layer][i])
+
+    for layer in range(len(weights)):
+        for j in range(LAYER_SIZES[layer + 1]):
+            @for_range_opt(LAYER_SIZES[layer], budget=LOOP_BUDGET)
+            def _(i):
+                weights[layer][i][j] -= (
+                    LR * weight_gradients[layer][i][j] / batch_size)
+        @for_range_opt(LAYER_SIZES[layer + 1], budget=LOOP_BUDGET)
+        def _(j):
+            biases[layer][j] -= LR * bias_gradients[layer][j] / batch_size
+
+
+def train_epoch(epoch):
+    loss_total = sfix(0)
+
+    @for_range_opt(FULL_BATCHES, budget=LOOP_BUDGET)
+    def _(batch):
+        train_batch(FULL_BATCH_SIZE, batch * FULL_BATCH_SIZE, loss_total)
+
+    train_batch(FINAL_BATCH_SIZE, FULL_BATCHES * FULL_BATCH_SIZE, loss_total)
+    print_ln("epoch=%s train_loss=%s", epoch + 1,
+             (loss_total / TRAIN).reveal())
+
+
+def evaluate(count, label):
+    loss_total = sfix(0)
+    correct = sint(0)
+    @for_range_opt(count, budget=LOOP_BUDGET)
+    def _(sample):
+        owner = sample % 3
+        activations[0].input_from(owner, binary=False)
+        target_values.input_from(owner, binary=False)
+        logits, probabilities = forward()
+        loss_total.update(loss_total + cross_entropy(logits, target_values))
+        correct.update(correct + (ml.argmax(probabilities) == ml.argmax(target_values)))
+    print_ln("%s loss=%s correct=%s total=%s", label,
+             (loss_total / count).reveal(), correct.reveal(), count)
+
+
+@for_range_opt(EPOCHS, budget=LOOP_BUDGET)
+def _(epoch):
+    train_epoch(epoch)
+evaluate(VALIDATION, "validation")
+evaluate(TEST, "test")

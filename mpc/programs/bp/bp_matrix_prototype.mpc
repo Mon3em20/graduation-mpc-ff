@@ -1,0 +1,121 @@
+"""Isolated batched-matrix Secure BP prototype."""
+import math
+from Compiler import ml
+from Compiler.library import for_range_opt
+from Compiler.mpc_math import log_fx
+
+program.unlimited_compilation()
+sfix.set_precision(16, 31)
+
+BATCH_SIZE = 3
+INPUTS, HIDDEN_1, HIDDEN_2, OUTPUTS = 784, 128, 128, 10
+LR = sfix(0.05)
+LOOP_BUDGET = 100
+
+W1 = sfix.Matrix(INPUTS, HIDDEN_1)
+b1 = sfix.Array(HIDDEN_1)
+W2 = sfix.Matrix(HIDDEN_1, HIDDEN_2)
+b2 = sfix.Array(HIDDEN_2)
+W3 = sfix.Matrix(HIDDEN_2, OUTPUTS)
+b3 = sfix.Array(OUTPUTS)
+for parameter in (W1, b1, W2, b2, W3, b3):
+    parameter.input_from(0, binary=False)
+
+X = sfix.Matrix(BATCH_SIZE, INPUTS)
+Y = sfix.Matrix(BATCH_SIZE, OUTPUTS)
+sample_x = sfix.Array(INPUTS)
+sample_y = sfix.Array(OUTPUTS)
+
+
+def load_batch(batch_start):
+    @for_range_opt(BATCH_SIZE, budget=LOOP_BUDGET)
+    def _(sample):
+        owner = (batch_start + sample) % 3
+        sample_x.input_from(owner, binary=False)
+        sample_y.input_from(owner, binary=False)
+        X.assign(sample_x, sample * INPUTS)
+        Y.assign(sample_y, sample * OUTPUTS)
+
+
+def add_bias(values, bias, rows, columns):
+    @for_range_opt(rows, budget=LOOP_BUDGET)
+    def _(row):
+        values.assign_vector(
+            values.get_vector(row * columns, columns) +
+            bias.get_vector(), row * columns)
+
+
+def cross_entropy(logits, target):
+    shifted_exp, shift = ml.exp_for_softmax(logits)
+    log_sum_exp = shift + log_fx(sum(shifted_exp), math.e)
+    return -(sum(target[k] * logits[k] for k in range(OUTPUTS))
+             - log_sum_exp)
+
+
+load_batch(0)
+
+Z1 = sfix.Matrix(BATCH_SIZE, HIDDEN_1)
+H1 = sfix.Matrix(BATCH_SIZE, HIDDEN_1)
+Z2 = sfix.Matrix(BATCH_SIZE, HIDDEN_2)
+H2 = sfix.Matrix(BATCH_SIZE, HIDDEN_2)
+Z3 = sfix.Matrix(BATCH_SIZE, OUTPUTS)
+P = sfix.Matrix(BATCH_SIZE, OUTPUTS)
+
+Z1.assign_vector(X.direct_mul(W1))
+add_bias(Z1, b1, BATCH_SIZE, HIDDEN_1)
+H1.assign_vector(ml.relu(Z1.get_vector()))
+Z2.assign_vector(H1.direct_mul(W2))
+add_bias(Z2, b2, BATCH_SIZE, HIDDEN_2)
+H2.assign_vector(ml.relu(Z2.get_vector()))
+Z3.assign_vector(H2.direct_mul(W3))
+add_bias(Z3, b3, BATCH_SIZE, OUTPUTS)
+
+@for_range_opt(BATCH_SIZE, budget=LOOP_BUDGET)
+def _(sample):
+    P.assign_vector(ml.softmax(Z3[sample].get_vector()),
+                    sample * OUTPUTS)
+
+D3 = sfix.Matrix(BATCH_SIZE, OUTPUTS)
+D2 = sfix.Matrix(BATCH_SIZE, HIDDEN_2)
+D1 = sfix.Matrix(BATCH_SIZE, HIDDEN_1)
+D3.assign_vector(P.get_vector() - Y.get_vector())
+D2.assign_vector(D3.direct_mul_trans(W3))
+D2.assign_vector(D2.get_vector() * (Z2.get_vector() > 0))
+D1.assign_vector(D2.direct_mul_trans(W2))
+D1.assign_vector(D1.get_vector() * (Z1.get_vector() > 0))
+
+dW3 = sfix.Matrix(HIDDEN_2, OUTPUTS)
+db3 = sfix.Array(OUTPUTS)
+dW2 = sfix.Matrix(HIDDEN_1, HIDDEN_2)
+db2 = sfix.Array(HIDDEN_2)
+dW1 = sfix.Matrix(INPUTS, HIDDEN_1)
+db1 = sfix.Array(HIDDEN_1)
+dW3.assign_vector(H2.direct_trans_mul(D3, reduce=False).reduce_after_mul())
+dW2.assign_vector(H1.direct_trans_mul(D2, reduce=False).reduce_after_mul())
+dW1.assign_vector(X.direct_trans_mul(D1, reduce=False).reduce_after_mul())
+for column in range(OUTPUTS):
+    db3[column] = sum(D3.get_column(column))
+for column in range(HIDDEN_2):
+    db2[column] = sum(D2.get_column(column))
+for column in range(HIDDEN_1):
+    db1[column] = sum(D1.get_column(column))
+
+scale = LR / BATCH_SIZE
+W3.assign_vector(W3.get_vector() - scale * dW3.get_vector())
+b3.assign_vector(b3.get_vector() - scale * db3.get_vector())
+W2.assign_vector(W2.get_vector() - scale * dW2.get_vector())
+b2.assign_vector(b2.get_vector() - scale * db2.get_vector())
+W1.assign_vector(W1.get_vector() - scale * dW1.get_vector())
+b1.assign_vector(b1.get_vector() - scale * db1.get_vector())
+
+loss = sfix(0)
+correct = sint(0)
+@for_range_opt(BATCH_SIZE, budget=LOOP_BUDGET)
+def _(sample):
+    logits = Z3[sample].get_vector()
+    target = Y[sample].get_vector()
+    loss.update(loss + cross_entropy(logits, target))
+    correct.update(correct + (ml.argmax(logits) == ml.argmax(target)))
+
+print_ln("train_loss=%s correct=%s total=%s",
+         (loss / BATCH_SIZE).reveal(), correct.reveal(), BATCH_SIZE)

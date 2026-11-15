@@ -1,0 +1,26 @@
+{
+  "architecture": "784-128-128-10",
+  "batch_sizes": [
+    3,
+    3,
+    3
+  ],
+  "counts": {
+    "test": 3,
+    "train": 9,
+    "validation": 3
+  },
+  "epochs": 1,
+  "experiment_id": "SECURE-BP-MATCHED-DIAGNOSTIC-v1",
+  "initialization_seed": 42,
+  "ownership": "global position modulo three",
+  "parameter_count": 118282,
+  "sha256": {
+    "Input-P0-0": "d1d058c3d59476d09f607db5dade309e8048d3d87c0a0e89c363a13accf698a8",
+    "Input-P1-0": "5cf5580c9cedbee3e4b11da7d11a3fffe1066e9085fdc938878b3f0e751b19c1",
+    "Input-P2-0": "88453d10f03dc67c845778bddc278f892cfa50aab453d09f00a7cb384d2351cd"
+  },
+  "split_policy": "first records of authoritative plaintext split",
+  "split_seed": 42,
+  "utility_seed": 42
+}

@@ -1,0 +1,40 @@
+experiment_id: SECURE-BP-MATCHED-v1
+framework:
+  name: MP-SPDZ
+  version: "v0.4.4"
+  commit: "113c4e47dd94bca9ecab029d2f0abe649bea5c52"
+protocol:
+  name: Rep3 Ring
+  parties: 3
+  security_model: semi-honest honest-majority
+  ring_bits: 64
+arithmetic:
+  fixed_point_type: sfix
+  precision_k: 31
+  precision_f: 16
+model:
+  architecture: "784-128-128-10"
+  parameter_count: 118282
+  activation: ReLU
+  loss: stable_softmax_cross_entropy
+  optimizer: SGD
+  learning_rate: 0.05
+  batch_size: 128
+  epochs: 5
+data:
+  dataset: MNIST
+  split_policy: "src.baselines.bp.datasets_and_indices"
+  split_seed: 42
+  train_samples: 5000
+  validation_samples: 1000
+  test_samples: 1000
+  ownership: "global sample position modulo three"
+initialization:
+  method: "PyTorch make_model after torch.manual_seed"
+  seed: 42
+ordering:
+  method: "torch.randperm"
+  seed: 42
+  state: "continued across epochs"
+diagnostics:
+  disclosure: "aggregate loss and correct count only"
