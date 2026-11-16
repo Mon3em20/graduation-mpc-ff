@@ -1,0 +1,213 @@
+"""SECURE-BP-MATCHED-v1, batched-matrix implementation (isolated variant).
+
+Same experiment as bp_matched.mpc (784-128-128-10, 5,000/1,000/1,000 MNIST,
+five epochs, 39 batches of 128 plus one of 8, vanilla SGD at 0.05, Rep3 Ring
+64-bit, sfix(16,31)) and the SAME input-stream format, but every batch is
+processed with MP-SPDZ native matrix products instead of per-sample scalar
+loops.  Per-sample scalar code is kept only where it is inherently
+per-sample: stable softmax / cross-entropy over the 10 logits.
+
+Input consumption order (identical to bp_matched.mpc): party 0 supplies
+W1[in,out], b1, W2[in,out], b2, W3[in,out], b3; then for every training
+position g within an epoch the owner g % 3 supplies 784 pixels and 10 one-hot
+labels; then validation and test samples with owner = sample % 3.
+
+Numerical differences from the scalar program (documented, not semantic):
+ * dot products are accumulated unreduced and truncated once per output
+   element (one truncation per product sum rather than per product);
+ * the SGD step is (0.05 * grad) * (1/B) with 1/B exactly representable
+   (B = 128 or 8), avoiding the 1.6 % rounding error of a single constant 0.05/128;
+ * evaluation predicts with argmax of the logits, as the plaintext baseline does.
+"""
+import math
+from Compiler import ml
+from Compiler.library import for_range, for_range_opt
+from Compiler.mpc_math import log_fx
+
+program.unlimited_compilation()
+sfix.set_precision(16, 31)
+
+INPUTS, HIDDEN_1, HIDDEN_2, OUTPUTS = 784, 128, 128, 10
+TRAIN, VALIDATION, TEST = 5000, 1000, 1000
+FULL_BATCH, FINAL_BATCH = 128, 8
+FULL_BATCHES = 39
+assert FULL_BATCHES * FULL_BATCH + FINAL_BATCH == TRAIN
+EPOCHS = 5
+EVAL_CHUNK = 100
+assert VALIDATION % EVAL_CHUNK == 0 and TEST % EVAL_CHUNK == 0
+LR = cfix(0.05)
+LOOP_BUDGET = 100
+
+W1 = sfix.Matrix(INPUTS, HIDDEN_1)
+b1 = sfix.Array(HIDDEN_1)
+W2 = sfix.Matrix(HIDDEN_1, HIDDEN_2)
+b2 = sfix.Array(HIDDEN_2)
+W3 = sfix.Matrix(HIDDEN_2, OUTPUTS)
+b3 = sfix.Array(OUTPUTS)
+for parameter in (W1, b1, W2, b2, W3, b3):
+    parameter.input_from(0, binary=False)
+
+dW1 = sfix.Matrix(INPUTS, HIDDEN_1)
+dW2 = sfix.Matrix(HIDDEN_1, HIDDEN_2)
+dW3 = sfix.Matrix(HIDDEN_2, OUTPUTS)
+db1 = sfix.Array(HIDDEN_1)
+db2 = sfix.Array(HIDDEN_2)
+db3 = sfix.Array(OUTPUTS)
+sample_x = sfix.Array(INPUTS)
+sample_y = sfix.Array(OUTPUTS)
+
+
+class Buffers(object):
+    """Row-major batch buffers for a compile-time batch size."""
+
+    def __init__(self, rows):
+        self.rows = rows
+        self.X = sfix.Matrix(rows, INPUTS)
+        self.Y = sfix.Matrix(rows, OUTPUTS)
+        self.Z1 = sfix.Matrix(rows, HIDDEN_1)
+        self.Z2 = sfix.Matrix(rows, HIDDEN_2)
+        self.Z3 = sfix.Matrix(rows, OUTPUTS)
+        self.H1 = sfix.Matrix(rows, HIDDEN_1)
+        self.H2 = sfix.Matrix(rows, HIDDEN_2)
+        self.M1 = sint.Matrix(rows, HIDDEN_1)
+        self.M2 = sint.Matrix(rows, HIDDEN_2)
+        self.P = sfix.Matrix(rows, OUTPUTS)
+        self.D1 = sfix.Matrix(rows, HIDDEN_1)
+        self.D2 = sfix.Matrix(rows, HIDDEN_2)
+        self.D3 = sfix.Matrix(rows, OUTPUTS)
+
+
+full_buffers = Buffers(FULL_BATCH)
+final_buffers = Buffers(FINAL_BATCH)
+eval_buffers = Buffers(EVAL_CHUNK)
+
+
+def load_rows(buf, start):
+    """Read buf.rows samples; sample r of this chunk has global position
+    start + r and is input by party (start + r) % 3 (sequential loop so the
+    per-party input streams are consumed in exact order)."""
+    @for_range(buf.rows)
+    def _(sample):
+        owner = (start + sample) % 3
+        sample_x.input_from(owner, binary=False)
+        sample_y.input_from(owner, binary=False)
+        buf.X.assign(sample_x, sample * INPUTS)
+        buf.Y.assign(sample_y, sample * OUTPUTS)
+
+
+def add_bias(values, bias, rows, columns):
+    @for_range_opt(rows, budget=LOOP_BUDGET)
+    def _(row):
+        values.assign_vector(
+            values.get_vector(row * columns, columns) + bias.get_vector(),
+            row * columns)
+
+
+def forward(buf):
+    """Affine layers with strict-positive ReLU; masks kept for backprop."""
+    rows = buf.rows
+    buf.Z1.assign_vector(buf.X.direct_mul(W1))
+    add_bias(buf.Z1, b1, rows, HIDDEN_1)
+    buf.M1.assign_vector(buf.Z1.get_vector() > 0)
+    buf.H1.assign_vector(buf.Z1.get_vector() * buf.M1.get_vector())
+    buf.Z2.assign_vector(buf.H1.direct_mul(W2))
+    add_bias(buf.Z2, b2, rows, HIDDEN_2)
+    buf.M2.assign_vector(buf.Z2.get_vector() > 0)
+    buf.H2.assign_vector(buf.Z2.get_vector() * buf.M2.get_vector())
+    buf.Z3.assign_vector(buf.H2.direct_mul(W3))
+    add_bias(buf.Z3, b3, rows, OUTPUTS)
+
+
+def row_loss(logits, target, exps, shift):
+    """Stable cross entropy: logsumexp - target . logits."""
+    log_sum_exp = shift + log_fx(sum(exps), math.e)
+    return -(sum(target[k] * logits[k] for k in range(OUTPUTS)) - log_sum_exp)
+
+
+def softmax_and_loss(buf, loss_total):
+    @for_range_opt(buf.rows, budget=LOOP_BUDGET)
+    def _(row):
+        logits = buf.Z3[row].get_vector()
+        target = buf.Y[row].get_vector()
+        exps, shift = ml.exp_for_softmax(logits)
+        buf.P.assign_vector(ml.softmax_from_exp(exps), row * OUTPUTS)
+        loss_total.update(loss_total + row_loss(logits, target, exps, shift))
+
+
+def column_sums(matrix, rows, columns, out):
+    total = matrix.get_vector(0, columns)
+    for row in range(1, rows):
+        total = total + matrix.get_vector(row * columns, columns)
+    out.assign_vector(total)
+
+
+def sgd_update(parameter, gradient, batch_rows):
+    inverse_batch = cfix(1.0 / batch_rows)  # exact: 1/128 and 1/8
+    parameter.assign_vector(
+        parameter.get_vector()
+        - (gradient.get_vector() * LR) * inverse_batch)
+
+
+def train_batch(buf, start, loss_total):
+    load_rows(buf, start)
+    forward(buf)
+    softmax_and_loss(buf, loss_total)
+    buf.D3.assign_vector(buf.P.get_vector() - buf.Y.get_vector())
+    buf.D2.assign_vector(buf.D3.direct_mul_trans(W3))
+    buf.D2.assign_vector(buf.D2.get_vector() * buf.M2.get_vector())
+    buf.D1.assign_vector(buf.D2.direct_mul_trans(W2))
+    buf.D1.assign_vector(buf.D1.get_vector() * buf.M1.get_vector())
+    dW3.assign_vector(buf.H2.direct_trans_mul(buf.D3, reduce=False).reduce_after_mul())
+    dW2.assign_vector(buf.H1.direct_trans_mul(buf.D2, reduce=False).reduce_after_mul())
+    dW1.assign_vector(buf.X.direct_trans_mul(buf.D1, reduce=False).reduce_after_mul())
+    column_sums(buf.D3, buf.rows, OUTPUTS, db3)
+    column_sums(buf.D2, buf.rows, HIDDEN_2, db2)
+    column_sums(buf.D1, buf.rows, HIDDEN_1, db1)
+    sgd_update(W3, dW3, buf.rows)
+    sgd_update(b3, db3, buf.rows)
+    sgd_update(W2, dW2, buf.rows)
+    sgd_update(b2, db2, buf.rows)
+    sgd_update(W1, dW1, buf.rows)
+    sgd_update(b1, db1, buf.rows)
+
+
+def train_epoch(epoch):
+    loss_total = sfix(0)
+
+    @for_range(FULL_BATCHES)
+    def _(batch):
+        train_batch(full_buffers, batch * FULL_BATCH, loss_total)
+
+    train_batch(final_buffers, FULL_BATCHES * FULL_BATCH, loss_total)
+    print_ln("epoch=%s train_loss=%s", epoch + 1, (loss_total / TRAIN).reveal())
+
+
+def evaluate(count, label):
+    loss_total = sfix(0)
+    correct = sint(0)
+    buf = eval_buffers
+
+    @for_range(count // EVAL_CHUNK)
+    def _(chunk):
+        load_rows(buf, chunk * EVAL_CHUNK)
+        forward(buf)
+
+        @for_range_opt(buf.rows, budget=LOOP_BUDGET)
+        def _(row):
+            logits = buf.Z3[row].get_vector()
+            target = buf.Y[row].get_vector()
+            exps, shift = ml.exp_for_softmax(logits)
+            loss_total.update(loss_total + row_loss(logits, target, exps, shift))
+            correct.update(correct + (ml.argmax(logits) == ml.argmax(target)))
+
+    print_ln("%s loss=%s correct=%s total=%s", label,
+             (loss_total / count).reveal(), correct.reveal(), count)
+
+
+@for_range(EPOCHS)
+def _(epoch):
+    train_epoch(epoch)
+
+
+evaluate(VALIDATION, "validation")
+evaluate(TEST, "test")

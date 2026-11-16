@@ -1,0 +1,35 @@
+Secure BP matched matrix full-run integrity manifest
+Audit timestamp: 2026-11-16T12:44:38+01:00
+
+Program
+Path: mpc/programs/bp/bp_matched_matrix.mpc
+SHA-256: 8134dd8d17e4338cab489c79823d1b9138487e7aab599c3c637dd6ee505583fd
+Status: VERIFIED; matches expected digest
+
+MP-SPDZ
+Commit: 113c4e47dd94bca9ecab029d2f0abe649bea5c52
+Status: VERIFIED against configs/bp_matched.yaml and configs/mpc.yaml
+
+Input bundle: ~/secure-bp-runs/SECURE-BP-MATCHED-v1_seed42_corrected/
+Input-P0-0 SHA-256: fde787c8020d23e6def405f7d4bf25768b96ce28b1b619a50447705f11fbbaf4
+Input-P1-0 SHA-256: acc6fed99ad532899e20348587ab3f7c895e0d7e2a8683380d390534d9cf2080
+Input-P2-0 SHA-256: c201ace19761080c0d555fbb43d21749f9742fb930b70dd0ce00aca547e47262
+Status: VERIFIED; all three match expected digests
+Verification summary: verification_summary.json reports all_pass=true
+
+Full-run log
+Path: ~/secure-bp-runs/SECURE-BP-MATCHED-MATRIX-v1_full_seed42_run_20261115_234946/full.log
+Size: 5911 bytes
+Status: VERIFIED; metrics and exit status 0 extracted from log
+
+Player-Data backup
+Path: ~/secure-bp-runs/player-data-backup_before_full_20261115_234946
+Size: 40492581 bytes
+File count: 33
+Status: VERIFIED; existence, structure, size, and count inspected
+Content handling: secret-bearing contents were not read or copied
+
+Repository state
+Status: Existing unrelated/uncommitted changes were preserved; no existing
+source, input, result, Player-Data, or documentation files were modified.
+

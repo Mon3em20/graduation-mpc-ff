@@ -1,0 +1,18 @@
+Default bit length for compilation: 63
+Default security parameter for compilation: 40
+Compiling file Programs/Source/diag.mpc
+Hash: 648745eed4990ee0ccdba9e15ef02a53d3d31e908036cb575953394b7965d72b
+Program requires at most:
+         inf integer inputs from player 0
+     5127351 integer probabilistic truncations
+           5 integer opens
+        7278 integer 3-way splits
+        6414 integer 3-way split rounds
+      846222 bit triples
+        9588 integer bit2As
+        7014 integer bit2A rounds
+     3361461 integer triples
+     3361461 integer simple multiplications
+          30 integer cut randoms
+        7440 bit opens
+    12220467 virtual machine rounds

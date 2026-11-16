@@ -1,0 +1,64 @@
+Default bit length for compilation: 63
+Default security parameter for compilation: 40
+Compiling file Programs/Source/bp_matrix_prototype.mpc
+Writing to Programs/Bytecode/bp_matrix_prototype-TruncPr(384)_47_16-1.bc
+Writing to Programs/Bytecode/bp_matrix_prototype-LTZ(384)_32-3.bc
+Writing to Programs/Bytecode/bp_matrix_prototype-TruncPr(30)_47_16-5.bc
+Writing to Programs/Bytecode/bp_matrix_prototype-LTZ(5)_32-6.bc
+Writing to Programs/Bytecode/bp_matrix_prototype-LTZ(2)_32-7.bc
+Writing to Programs/Bytecode/bp_matrix_prototype-LTZ(1)_32-8.bc
+Writing to Programs/Bytecode/bp_matrix_prototype-LTZ(10)_32-9.bc
+Writing to Programs/Bytecode/bp_matrix_prototype-TruncPr(10)_45_14-10.bc
+Writing to Programs/Bytecode/bp_matrix_prototype-exp2_fx(10)_31_16_False-12.bc
+Writing to Programs/Bytecode/bp_matrix_prototype-AppRcr(1)_31_16_False_False-14.bc
+Writing to Programs/Bytecode/bp_matrix_prototype-TruncPr(10)_63_16-16.bc
+Writing to Programs/Bytecode/bp_matrix_prototype-TruncPr(10)_63_32-18.bc
+Writing to Programs/Bytecode/bp_matrix_prototype-TruncPr(1)_62_32-20.bc
+Writing to Programs/Bytecode/bp_matrix_prototype-TruncPr(1280)_47_16-22.bc
+Writing to Programs/Bytecode/bp_matrix_prototype-TruncPr(16384)_47_16-23.bc
+Writing to Programs/Bytecode/bp_matrix_prototype-TruncPr(100352)_47_16-24.bc
+Writing to Programs/Bytecode/bp_matrix_prototype-FPDiv(1)_31_16-25.bc
+Writing to Programs/Bytecode/bp_matrix_prototype-TruncPr(10)_47_16-27.bc
+Writing to Programs/Bytecode/bp_matrix_prototype-TruncPr(128)_47_16-28.bc
+Writing to Programs/Bytecode/bp_matrix_prototype-LTZ(15)_32-29.bc
+Writing to Programs/Bytecode/bp_matrix_prototype-LTZ(6)_32-30.bc
+Writing to Programs/Bytecode/bp_matrix_prototype-LTZ(3)_32-31.bc
+Writing to Programs/Bytecode/bp_matrix_prototype-log2_fx(1)_31_16-32.bc
+Writing to Programs/Bytecode/bp_matrix_prototype-TruncPr(1)_46_15-34.bc
+Writing to Programs/Bytecode/bp_matrix_prototype-EQZ(1)_63-36.bc
+Writing to Programs/Schedules/bp_matrix_prototype.sch
+Writing to Programs/Bytecode/bp_matrix_prototype-0.bc
+Hash: 0094d03b79d89fac2300af18dfb1e423ee9366327abba74bdd2f014228c9ac98
+Program requires at most:
+         inf integer inputs from player 0
+      882775 integer triples
+           1 matrix multiplications (3x784 * 784x128)
+      119582 integer dot products
+      239254 integer probabilistic truncations
+        1797 integer 3-way splits
+          73 integer 3-way split rounds
+      208860 bit triples
+        2259 integer bit2As
+         211 integer bit2A rounds
+      121687 integer simple multiplications
+           2 matrix multiplications (3x128 * 128x128)
+           1 matrix multiplications (3x128 * 128x10)
+           1 matrix multiplications (3x10 * 10x128)
+           1 matrix multiplications (128x3 * 3x10)
+           1 matrix multiplications (128x3 * 3x128)
+           1 matrix multiplications (784x3 * 3x128)
+           2 integer opens
+           6 integer cut randoms
+        1488 bit opens
+        1095 virtual machine rounds
+Running program...
+Running /home/abdelmonem/MP-SPDZ/Scripts/../replicated-ring-party.x 0 bp_matrix_prototype -pn 13874 -h localhost
+Running /home/abdelmonem/MP-SPDZ/Scripts/../replicated-ring-party.x 1 bp_matrix_prototype -pn 13874 -h localhost
+Running /home/abdelmonem/MP-SPDZ/Scripts/../replicated-ring-party.x 2 bp_matrix_prototype -pn 13874 -h localhost
+Trying to run 64-bit computation
+train_loss=2.32129 correct=0 total=3
+The following benchmarks are including preprocessing (offline phase).
+Time = 0.292357 seconds 
+Data sent = 4.84403 MB in ~1552 rounds (party 0 only; use '-v' for more details)
+Global data sent = 14.5536 MB (all parties)
+The computation domain is too small for low-round truncation; it would need to have at least 103 bits.

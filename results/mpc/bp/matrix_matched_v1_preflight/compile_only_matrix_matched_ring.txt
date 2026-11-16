@@ -1,0 +1,38 @@
+Default bit length for compilation: 63
+Default security parameter for compilation: 40
+Compiling file Programs/Source/matrix_matched.mpc
+Hash: 1636dd29ece205a0d3adf9fb6e07f2e8d19f2504ad7ea9ef48ebf223aa113ca0
+Program requires at most:
+         inf integer inputs from player 0
+    91680035 integer probabilistic truncations
+           9 integer opens
+  6601886000 integer triples
+           5 matrix multiplications (8x784 * 784x128)
+    37185200 integer dot products
+     7997000 integer 3-way splits
+      428440 integer 3-way split rounds
+   933945000 bit triples
+    10533000 integer bit2As
+     1506440 integer bit2A rounds
+    23454000 integer simple multiplications
+          10 matrix multiplications (8x128 * 128x128)
+           5 matrix multiplications (8x128 * 128x10)
+           5 matrix multiplications (8x10 * 10x128)
+           5 matrix multiplications (128x8 * 8x10)
+           5 matrix multiplications (128x8 * 8x128)
+           5 matrix multiplications (784x8 * 8x128)
+         195 matrix multiplications (128x784 * 784x128)
+         585 matrix multiplications (128x128 * 128x128)
+         390 matrix multiplications (128x128 * 128x10)
+         195 matrix multiplications (128x10 * 10x128)
+         195 matrix multiplications (784x128 * 128x128)
+       52000 integer cut randoms
+    12896000 bit opens
+          20 matrix multiplications (100x784 * 784x128)
+          20 matrix multiplications (100x128 * 128x128)
+          20 matrix multiplications (100x128 * 128x10)
+     5638872 virtual machine rounds
+
+real	0m15.511s
+user	0m14.741s
+sys	0m0.769s

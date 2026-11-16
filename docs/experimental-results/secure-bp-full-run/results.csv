@@ -1,0 +1,16 @@
+method,split,epoch,loss,correct,total,accuracy_pct,seed,notes
+Secure BP,train,1,2.27463,,,,42,Verified from full-run log
+Secure BP,train,2,2.16141,,,,42,Verified from full-run log
+Secure BP,train,3,1.84132,,,,42,Verified from full-run log
+Secure BP,train,4,1.30545,,,,42,Verified from full-run log
+Secure BP,train,5,0.908951,,,,42,Verified from full-run log
+Secure BP,validation,5,0.787674,767,1000,76.7,42,Verified from full-run log
+Secure BP,test,5,0.77771,772,1000,77.2,42,Verified from full-run log
+Plain BP,train,1,2.2747019737243654,,,,42,Repository-recorded baseline
+Plain BP,train,2,2.161566234970093,,,,42,Repository-recorded baseline
+Plain BP,train,3,1.8416416954040526,,,,42,Repository-recorded baseline
+Plain BP,train,4,1.3057574975967408,,,,42,Repository-recorded baseline
+Plain BP,train,5,0.9091569893836975,,,,42,Repository-recorded baseline
+Plain BP,validation,5,0.7881155166625976,,1000,76.6,42,Repository-recorded baseline
+Plain BP,test,5,0.778144187927246,772,1000,77.2,42,Repository-recorded baseline
+

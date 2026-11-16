@@ -1,0 +1,61 @@
+{
+  "bundle": "/home/abdelmonem/secure-bp-runs/SECURE-BP-MATCHED-MATRIX-v1_smoke_seed42",
+  "token_counts": [
+    242146,
+    122276,
+    122276
+  ],
+  "samples_per_party": [
+    {
+      "train": 88,
+      "validation": 34,
+      "test": 34
+    },
+    {
+      "train": 88,
+      "validation": 33,
+      "test": 33
+    },
+    {
+      "train": 88,
+      "validation": 33,
+      "test": 33
+    }
+  ],
+  "sha256": {
+    "Input-P0-0": "e57ca34bd255c7f624f168343d04a15c1d082ba5dea120e2293e715b434e981a",
+    "Input-P1-0": "9025f1555b488302d7f08e23d4a93550fed9e817f971173bb5f10cd3c6288e37",
+    "Input-P2-0": "4640b95463e58aca666f42f123b3cad99e3fe7cea624e88dda4179d03278427e"
+  },
+  "eval_first_validation_indices": [
+    16706,
+    24771,
+    26296
+  ],
+  "eval_last_validation_index": 30916,
+  "eval_first_test_indices": [
+    4204,
+    7969,
+    3421
+  ],
+  "eval_last_test_index": 7468,
+  "train_first_indices": [
+    1996,
+    40890,
+    19877
+  ],
+  "train_last_index": 42088,
+  "checks": {
+    "parameters_equal_seed42_transposed_layout": true,
+    "parameter_tokens": true,
+    "train_samples_match_baseline_epoch1_prefix": true,
+    "train_ownership_and_batch_boundaries": true,
+    "validation_first100_order_and_ownership": true,
+    "test_first100_order_and_ownership": true,
+    "all_tokens_consumed": true,
+    "token_counts": true,
+    "metadata_hashes_match_files": true,
+    "metadata_counts_match": true
+  },
+  "all_pass": true
+}

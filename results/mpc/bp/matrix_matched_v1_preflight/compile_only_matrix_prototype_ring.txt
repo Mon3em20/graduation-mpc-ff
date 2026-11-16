@@ -1,0 +1,26 @@
+Default bit length for compilation: 63
+Default security parameter for compilation: 40
+Compiling file Programs/Source/proto.mpc
+Hash: 468bb93d9e1583d0ffe67a349e28d21d94093adb470895fa9ac5dfb2c4109dda
+Program requires at most:
+         inf integer inputs from player 0
+      882775 integer triples
+           1 matrix multiplications (3x784 * 784x128)
+      119582 integer dot products
+      239254 integer probabilistic truncations
+        1797 integer 3-way splits
+          73 integer 3-way split rounds
+      208860 bit triples
+        2259 integer bit2As
+         211 integer bit2A rounds
+      121687 integer simple multiplications
+           2 matrix multiplications (3x128 * 128x128)
+           1 matrix multiplications (3x128 * 128x10)
+           1 matrix multiplications (3x10 * 10x128)
+           1 matrix multiplications (128x3 * 3x10)
+           1 matrix multiplications (128x3 * 3x128)
+           1 matrix multiplications (784x3 * 3x128)
+           2 integer opens
+           6 integer cut randoms
+        1488 bit opens
+        1095 virtual machine rounds

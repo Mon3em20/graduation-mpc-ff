@@ -1,0 +1,22 @@
+Default bit length for compilation: 63
+Default security parameter for compilation: 40
+Compiling file Programs/Source/scalar_matched.mpc
+Hash: af61286a8df178dbd4e56b68d7843228d6dfc2814242f990bef21183af315519
+Program requires at most:
+         inf integer inputs from player 0
+  6638164835 integer probabilistic truncations
+           9 integer opens
+    15186000 integer 3-way splits
+    13754000 integer 3-way split rounds
+  1761310000 bit triples
+    19344000 integer bit2As
+    14834000 integer bit2A rounds
+  6631571400 integer triples
+  6631571400 integer simple multiplications
+       54000 integer cut randoms
+    13392000 bit opens
+ 19965875172 virtual machine rounds
+
+real	0m34.380s
+user	0m33.726s
+sys	0m0.652s

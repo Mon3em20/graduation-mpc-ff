@@ -1,0 +1,6 @@
+Compile-only, run in a scratch copy of the pinned MP-SPDZ Compiler (python files only), never in ~/MP-SPDZ:
+  python3 compile.py -E ring -l -M <program>
+compile.py (execute=False) only calls compile_file(); "-E ring" means "protocol to optimize for"
+(it sets use_trunc_pr/use_split exactly as compile-run.py does). No party binary is started.
+Reproduction check: the prototype compile reproduces the logged statistics of
+results/mpc/bp/matrix_prototype_seed42.log exactly (882,775 triples, 1,095 rounds).
